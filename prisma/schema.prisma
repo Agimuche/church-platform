@@ -1,0 +1,554 @@
+// Church Media & Digital Services Platform — Database Schema
+// PostgreSQL + Prisma. See README.md for setup instructions.
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// ─────────────────────────────────────────────────────────────
+// ENUMS
+// ─────────────────────────────────────────────────────────────
+
+enum Role {
+  VISITOR
+  MEMBER
+  MEDIA_TEAM
+  PASTOR
+  ADMIN
+  SUPER_ADMIN
+}
+
+enum MediaType {
+  SERMON_VIDEO
+  SERMON_AUDIO
+  VIDEO
+  AUDIO
+  IMAGE
+  DOCUMENT
+  BOOK
+}
+
+enum Visibility {
+  PUBLIC
+  MEMBERS_ONLY
+  PRIVATE
+}
+
+enum ProductType {
+  DIGITAL_BOOK
+  DIGITAL_AUDIO
+  DIGITAL_VIDEO
+  DIGITAL_DOCUMENT
+  PHYSICAL
+}
+
+enum OrderStatus {
+  PENDING
+  PAID
+  FAILED
+  REFUNDED
+  CANCELLED
+  FULFILLED
+}
+
+enum PaymentStatus {
+  PENDING
+  SUCCESS
+  FAILED
+  REFUNDED
+}
+
+enum PrayerVisibility {
+  PRIVATE
+  PUBLIC
+}
+
+enum PrayerStatus {
+  NEW
+  IN_PROGRESS
+  PRAYED_FOR
+  CLOSED
+}
+
+enum CounselingStatus {
+  REQUESTED
+  ACCEPTED
+  DECLINED
+  SCHEDULED
+  COMPLETED
+  CANCELLED
+}
+
+enum AppointmentStatus {
+  PENDING
+  CONFIRMED
+  COMPLETED
+  CANCELLED
+  NO_SHOW
+}
+
+enum StreamStatus {
+  SCHEDULED
+  LIVE
+  ENDED
+  CANCELLED
+}
+
+enum NotificationChannel {
+  IN_APP
+  EMAIL
+  PUSH
+}
+
+enum NotificationType {
+  COUNSELING_UPDATE
+  PRAYER_UPDATE
+  PAYMENT_SUCCESS
+  NEW_SERMON
+  LIVE_STARTING
+  ANNOUNCEMENT
+  SYSTEM
+}
+
+// ─────────────────────────────────────────────────────────────
+// AUTH / USERS / RBAC
+// ─────────────────────────────────────────────────────────────
+
+model User {
+  id              String   @id @default(cuid())
+  name            String
+  email           String   @unique
+  emailVerified   DateTime?
+  passwordHash    String?
+  image           String?
+  phone           String?
+  role            Role     @default(VISITOR)
+  isActive        Boolean  @default(true)
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+  deletedAt       DateTime?
+
+  accounts        Account[]
+  sessions        Session[]
+
+  mediaUploaded       Media[]              @relation("MediaUploadedBy")
+  productsCreated      Product[]           @relation("ProductCreatedBy")
+  orders               Order[]
+  prayerRequests       PrayerRequest[]     @relation("PrayerRequester")
+  prayerAssignments    PrayerRequest[]     @relation("PrayerAssignee")
+  counselingRequests   CounselingRequest[] @relation("CounselingRequester")
+  counselingHandledBy  CounselingRequest[] @relation("CounselingHandler")
+  appointments         Appointment[]       @relation("AppointmentUser")
+  announcementsCreated Announcement[]      @relation("AnnouncementCreatedBy")
+  galleriesCreated     Gallery[]           @relation("GalleryCreatedBy")
+  liveStreamsManaged   LiveStream[]        @relation("StreamCreatedBy")
+  notifications        Notification[]
+  bookmarks            Bookmark[]
+  downloads            Download[]
+  auditLogs            AuditLog[]
+
+  @@index([role])
+  @@index([email])
+}
+
+// NextAuth-compatible tables
+model Account {
+  id                String  @id @default(cuid())
+  userId            String
+  type              String
+  provider          String
+  providerAccountId String
+  refresh_token     String? @db.Text
+  access_token      String? @db.Text
+  expires_at        Int?
+  token_type        String?
+  scope             String?
+  id_token          String? @db.Text
+  session_state     String?
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([provider, providerAccountId])
+}
+
+model Session {
+  id           String   @id @default(cuid())
+  sessionToken String   @unique
+  userId       String
+  expires      DateTime
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model VerificationToken {
+  identifier String
+  token      String   @unique
+  expires    DateTime
+
+  @@unique([identifier, token])
+}
+
+// ─────────────────────────────────────────────────────────────
+// TAXONOMY
+// ─────────────────────────────────────────────────────────────
+
+model Category {
+  id        String   @id @default(cuid())
+  name      String
+  slug      String   @unique
+  type      String // "media" | "product" | "gallery" | "counseling"
+  createdAt DateTime @default(now())
+
+  media    Media[]
+  products Product[]
+
+  @@index([type])
+}
+
+model Tag {
+  id    String @id @default(cuid())
+  name  String @unique
+  slug  String @unique
+
+  media    Media[]    @relation("MediaTags")
+  products Product[]  @relation("ProductTags")
+}
+
+model Speaker {
+  id        String   @id @default(cuid())
+  name      String
+  bio       String?  @db.Text
+  photoUrl  String?
+  createdAt DateTime @default(now())
+
+  media Media[]
+}
+
+// ─────────────────────────────────────────────────────────────
+// MEDIA LIBRARY / SERMONS
+// ─────────────────────────────────────────────────────────────
+
+model Media {
+  id               String     @id @default(cuid())
+  title            String
+  slug             String     @unique
+  description      String?    @db.Text
+  type             MediaType
+  speakerId        String?
+  categoryId       String?
+  thumbnailUrl     String?
+  fileUrl          String? // storage key/URL via StorageProvider
+  durationSeconds  Int?
+  visibility       Visibility @default(PUBLIC)
+  price            Decimal?   @db.Decimal(10, 2) // null = free
+  allowDownload    Boolean    @default(false)
+  isPublished      Boolean    @default(false)
+  isFeatured       Boolean    @default(false)
+  publishedAt      DateTime?
+  viewCount        Int        @default(0)
+  createdById      String
+  createdAt        DateTime   @default(now())
+  updatedAt        DateTime   @updatedAt
+  deletedAt        DateTime?
+
+  speaker    Speaker?  @relation(fields: [speakerId], references: [id])
+  category   Category? @relation(fields: [categoryId], references: [id])
+  createdBy  User      @relation("MediaUploadedBy", fields: [createdById], references: [id])
+  tags       Tag[]     @relation("MediaTags")
+  bookmarks  Bookmark[]
+  downloads  Download[]
+  relatedTo  LiveStream[] @relation("StreamRelatedSermon")
+
+  @@index([type, isPublished])
+  @@index([visibility])
+  @@index([speakerId])
+  @@index([categoryId])
+}
+
+model Bookmark {
+  id        String   @id @default(cuid())
+  userId    String
+  mediaId   String
+  createdAt DateTime @default(now())
+
+  user  User  @relation(fields: [userId], references: [id], onDelete: Cascade)
+  media Media @relation(fields: [mediaId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, mediaId])
+}
+
+model Download {
+  id        String   @id @default(cuid())
+  userId    String
+  mediaId   String
+  createdAt DateTime @default(now())
+
+  user  User  @relation(fields: [userId], references: [id], onDelete: Cascade)
+  media Media @relation(fields: [mediaId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([mediaId])
+}
+
+// ─────────────────────────────────────────────────────────────
+// STORE / COMMERCE
+// ─────────────────────────────────────────────────────────────
+
+model Product {
+  id              String      @id @default(cuid())
+  name            String
+  slug            String      @unique
+  description     String?     @db.Text
+  type            ProductType
+  price           Decimal     @db.Decimal(10, 2)
+  images          String[]
+  categoryId      String?
+  inventoryCount  Int? // null = unlimited/digital
+  digitalFileUrl  String?
+  isPublished     Boolean     @default(false)
+  createdById     String
+  createdAt       DateTime    @default(now())
+  updatedAt       DateTime    @updatedAt
+  deletedAt       DateTime?
+
+  category   Category?   @relation(fields: [categoryId], references: [id])
+  createdBy  User        @relation("ProductCreatedBy", fields: [createdById], references: [id])
+  tags       Tag[]       @relation("ProductTags")
+  orderItems OrderItem[]
+
+  @@index([type, isPublished])
+}
+
+model Order {
+  id            String      @id @default(cuid())
+  userId        String
+  status        OrderStatus @default(PENDING)
+  totalAmount   Decimal     @db.Decimal(10, 2)
+  currency      String      @default("NGN")
+  shippingInfo  Json?
+  createdAt     DateTime    @default(now())
+  updatedAt     DateTime    @updatedAt
+
+  user     User        @relation(fields: [userId], references: [id])
+  items    OrderItem[]
+  payments Payment[]
+
+  @@index([userId, status])
+}
+
+model OrderItem {
+  id         String  @id @default(cuid())
+  orderId    String
+  productId  String
+  quantity   Int     @default(1)
+  unitPrice  Decimal @db.Decimal(10, 2)
+
+  order   Order   @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  product Product @relation(fields: [productId], references: [id])
+
+  @@index([orderId])
+}
+
+model Payment {
+  id                String        @id @default(cuid())
+  orderId           String
+  provider          String        @default("paystack")
+  providerReference String        @unique
+  amount            Decimal       @db.Decimal(10, 2)
+  currency          String        @default("NGN")
+  status            PaymentStatus @default(PENDING)
+  rawResponse       Json?
+  createdAt         DateTime      @default(now())
+  updatedAt         DateTime      @updatedAt
+
+  order Order @relation(fields: [orderId], references: [id])
+
+  @@index([orderId])
+  @@index([providerReference])
+}
+
+// ─────────────────────────────────────────────────────────────
+// CHURCH SERVICES: PRAYER + COUNSELING
+// ─────────────────────────────────────────────────────────────
+
+model PrayerRequest {
+  id           String           @id @default(cuid())
+  requesterId  String?
+  guestName    String?
+  guestEmail   String?
+  message      String           @db.Text
+  visibility   PrayerVisibility @default(PRIVATE)
+  status       PrayerStatus     @default(NEW)
+  assigneeId   String?
+  internalNote String?          @db.Text
+  createdAt    DateTime         @default(now())
+  updatedAt    DateTime         @updatedAt
+
+  requester User? @relation("PrayerRequester", fields: [requesterId], references: [id])
+  assignee  User? @relation("PrayerAssignee", fields: [assigneeId], references: [id])
+
+  @@index([status])
+  @@index([visibility])
+}
+
+model CounselingRequest {
+  id              String            @id @default(cuid())
+  requesterId     String?
+  guestName       String?
+  guestEmail      String?
+  guestPhone      String?
+  category        String
+  description     String            @db.Text
+  preferredDate   DateTime?
+  status          CounselingStatus  @default(REQUESTED)
+  handledById     String?
+  privateNotes    String?           @db.Text
+  createdAt       DateTime          @default(now())
+  updatedAt       DateTime          @updatedAt
+
+  requester   User?        @relation("CounselingRequester", fields: [requesterId], references: [id])
+  handledBy   User?        @relation("CounselingHandler", fields: [handledById], references: [id])
+  appointment Appointment?
+
+  @@index([status])
+}
+
+model Appointment {
+  id                  String             @id @default(cuid())
+  counselingRequestId String             @unique
+  userId              String
+  scheduledAt         DateTime
+  durationMinutes      Int                @default(30)
+  status              AppointmentStatus  @default(PENDING)
+  location            String? // physical location or video call link
+  notes               String?            @db.Text
+  createdAt           DateTime           @default(now())
+  updatedAt           DateTime           @updatedAt
+
+  counselingRequest CounselingRequest @relation(fields: [counselingRequestId], references: [id], onDelete: Cascade)
+  user              User              @relation("AppointmentUser", fields: [userId], references: [id])
+
+  @@index([status])
+}
+
+// ─────────────────────────────────────────────────────────────
+// ANNOUNCEMENTS / GALLERY
+// ─────────────────────────────────────────────────────────────
+
+model Announcement {
+  id          String    @id @default(cuid())
+  title       String
+  body        String    @db.Text
+  imageUrl    String?
+  isPinned    Boolean   @default(false)
+  publishAt   DateTime  @default(now())
+  expiresAt   DateTime?
+  createdById String
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  createdBy User @relation("AnnouncementCreatedBy", fields: [createdById], references: [id])
+
+  @@index([publishAt, expiresAt])
+}
+
+model Gallery {
+  id          String   @id @default(cuid())
+  title       String
+  slug        String   @unique
+  description String?  @db.Text
+  eventDate   DateTime?
+  isFeatured  Boolean  @default(false)
+  createdById String
+  createdAt   DateTime @default(now())
+
+  createdBy User          @relation("GalleryCreatedBy", fields: [createdById], references: [id])
+  items     GalleryItem[]
+}
+
+model GalleryItem {
+  id        String   @id @default(cuid())
+  galleryId String
+  imageUrl  String
+  caption   String?
+  order     Int      @default(0)
+  createdAt DateTime @default(now())
+
+  gallery Gallery @relation(fields: [galleryId], references: [id], onDelete: Cascade)
+
+  @@index([galleryId])
+}
+
+// ─────────────────────────────────────────────────────────────
+// LIVE STREAMING
+// ─────────────────────────────────────────────────────────────
+
+model LiveStream {
+  id               String       @id @default(cuid())
+  title            String
+  description      String?      @db.Text
+  thumbnailUrl     String?
+  scheduledStart   DateTime
+  scheduledEnd     DateTime?
+  actualStart      DateTime?
+  actualEnd        DateTime?
+  status           StreamStatus @default(SCHEDULED)
+  provider         String       @default("mock")
+  providerStreamId String? // id returned by the StreamingProvider
+  playbackUrl      String?
+  viewerCount      Int          @default(0)
+  createdById      String
+  relatedSermonId  String?
+  createdAt        DateTime     @default(now())
+  updatedAt        DateTime     @updatedAt
+
+  createdBy     User   @relation("StreamCreatedBy", fields: [createdById], references: [id])
+  relatedSermon Media? @relation("StreamRelatedSermon", fields: [relatedSermonId], references: [id])
+
+  @@index([status])
+  @@index([scheduledStart])
+}
+
+// ─────────────────────────────────────────────────────────────
+// NOTIFICATIONS
+// ─────────────────────────────────────────────────────────────
+
+model Notification {
+  id        String              @id @default(cuid())
+  userId    String
+  type      NotificationType
+  channel   NotificationChannel @default(IN_APP)
+  title     String
+  body      String
+  readAt    DateTime?
+  metadata  Json?
+  createdAt DateTime            @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, readAt])
+}
+
+// ─────────────────────────────────────────────────────────────
+// AUDIT LOG
+// ─────────────────────────────────────────────────────────────
+
+model AuditLog {
+  id         String   @id @default(cuid())
+  userId     String?
+  action     String
+  entityType String
+  entityId   String?
+  metadata   Json?
+  createdAt  DateTime @default(now())
+
+  user User? @relation(fields: [userId], references: [id])
+
+  @@index([entityType, entityId])
+  @@index([userId])
+}

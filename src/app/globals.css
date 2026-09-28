@@ -1,0 +1,73 @@
+@import "tailwindcss";
+
+:root {
+  --background: #f8fafc;
+  --foreground: #0f172a;
+  --paper: #ffffff;
+  --ink: #0f172a;
+  --ink-muted: #475569;
+  
+  /* The Brook Church Brand Palette */
+  --accent: #0066b2;          /* Primary Deep Ocean / Royal Blue */
+  --accent-dark: #004080;     /* Darker Navy Blue */
+  --accent-light: #0284c7;    /* Vibrant Blue / Cyan highlight */
+  --gold: #d97706;            /* Warm Amber / Gold for badges */
+  --live: #dc2626;            /* Live stream broadcast red */
+  
+  --border: #e2e8f0;
+  --surface-tint: #f0f5fa;    /* Soft Ice Blue tint */
+  --surface-elevated: #ffffff;
+  
+  /* Hero Gradient */
+  --tbc-gradient-from: #0066b2;
+  --tbc-gradient-to: #431407;
+  --tbc-gradient-purple: #5e2590;
+}
+
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-paper: var(--paper);
+  --color-ink: var(--ink);
+  --color-ink-muted: var(--ink-muted);
+  --color-accent: var(--accent);
+  --color-accent-dark: var(--accent-dark);
+  --color-accent-light: var(--accent-light);
+  --color-gold: var(--gold);
+  --color-live: var(--live);
+  --color-border: var(--border);
+  --color-surface-tint: var(--surface-tint);
+  --color-surface-elevated: var(--surface-elevated);
+  --font-sans: var(--font-inter);
+  --font-serif: var(--font-source-serif);
+}
+
+body {
+  background: var(--background);
+  color: var(--foreground);
+  font-family: var(--font-sans), system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+}
+
+.container-app {
+  max-width: 78rem;
+  margin-inline: auto;
+  padding-inline: 1.25rem;
+}
+
+/* Glassmorphism & custom utility classes */
+.tbc-hero-gradient {
+  background: linear-gradient(135deg, #00529b 0%, #0066b2 40%, #5e2590 100%);
+}
+
+.tbc-card-hover {
+  transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.tbc-card-hover:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 12px 24px -10px rgba(0, 102, 178, 0.15);
+}
+
+.tbc-glow {
+  box-shadow: 0 0 25px -5px rgba(0, 102, 178, 0.3);
+}
