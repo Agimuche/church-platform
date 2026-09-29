@@ -2,6 +2,7 @@ import Link from "next/link";
 import Image from "next/image";
 import { auth } from "@/lib/auth/auth";
 import { MobileNav } from "./mobile-nav";
+import { ThemeToggle } from "@/components/theme/theme-toggle";
 
 const NAV_LINKS = [
   { href: "/", label: "Home" },
@@ -24,9 +25,9 @@ export async function SiteHeader() {
   const user = session?.user;
 
   return (
-    <header className="sticky top-0 z-40 border-b border-border bg-paper/95 backdrop-blur shadow-xs">
+    <header className="sticky top-0 z-40 border-b border-border bg-paper/95 backdrop-blur-md shadow-xs transition-colors">
       {/* Top micro-announcement / service times bar */}
-      <div className="hidden bg-slate-900 px-4 py-1.5 text-xs text-slate-300 sm:block">
+      <div className="hidden bg-slate-900 px-4 py-1.5 text-xs text-slate-300 sm:block dark:bg-slate-950/90 dark:border-b dark:border-slate-800/60">
         <div className="container-app flex items-center justify-between">
           <div className="flex items-center gap-4">
             <span className="flex items-center gap-1.5">
@@ -69,7 +70,7 @@ export async function SiteHeader() {
       <div className="container-app flex h-18 items-center justify-between gap-4">
         {/* Logo */}
         <Link href="/" className="flex items-center gap-2.5 group">
-          <div className="relative h-11 w-11 overflow-hidden rounded-xl shadow-md transition group-hover:scale-105">
+          <div className="relative h-11 w-11 overflow-hidden rounded-xl border border-sky-400/20 shadow-md transition group-hover:scale-105">
             <Image
               src="/logo.jpg"
               alt="The Brook Church Logo"
@@ -79,17 +80,17 @@ export async function SiteHeader() {
             />
           </div>
           <div className="flex flex-col">
-            <span className="font-bold text-lg leading-tight tracking-tight text-slate-900 group-hover:text-accent transition">
+            <span className="font-bold text-lg leading-tight tracking-tight text-ink group-hover:text-accent transition">
               The Brook Church
             </span>
-            <span className="text-[10px] uppercase font-semibold tracking-wider text-slate-500">
+            <span className="text-[10px] uppercase font-semibold tracking-wider text-ink-muted">
               Calabar &bull; Nigeria
             </span>
           </div>
         </Link>
 
         {/* Desktop Navigation */}
-        <nav className="hidden items-center gap-5 text-sm font-medium text-slate-600 xl:flex">
+        <nav className="hidden items-center gap-5 text-sm font-medium text-ink-muted xl:flex">
           {NAV_LINKS.slice(0, 7).map((link) => (
             <Link
               key={link.href}
@@ -102,7 +103,7 @@ export async function SiteHeader() {
             </Link>
           ))}
           <div className="relative group py-2">
-            <button className="flex items-center gap-1 text-slate-600 hover:text-accent transition">
+            <button className="flex items-center gap-1 text-ink-muted hover:text-accent transition">
               <span>More</span>
               <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7" />
@@ -113,7 +114,7 @@ export async function SiteHeader() {
                 <Link
                   key={link.href}
                   href={link.href}
-                  className="rounded-lg px-3 py-2 text-sm text-slate-700 hover:bg-slate-50 hover:text-accent transition"
+                  className="rounded-lg px-3 py-2 text-sm text-ink hover:bg-surface-tint hover:text-accent transition"
                 >
                   {link.label}
                 </Link>
@@ -124,6 +125,8 @@ export async function SiteHeader() {
 
         {/* Right CTAs (Desktop) */}
         <div className="hidden items-center gap-3 xl:flex">
+          <ThemeToggle />
+
           <Link
             href="/live"
             className="flex items-center gap-1.5 rounded-full bg-red-600 px-4 py-1.5 text-xs font-bold text-white shadow-xs transition hover:bg-red-700"
@@ -143,7 +146,7 @@ export async function SiteHeader() {
               {user.role && ADMIN_ROLES.has(user.role) && (
                 <Link
                   href="/admin"
-                  className="rounded-full border border-border px-3.5 py-1.5 text-xs font-medium text-slate-700 transition hover:border-accent hover:text-accent"
+                  className="rounded-full border border-border px-3.5 py-1.5 text-xs font-medium text-ink transition hover:border-accent hover:text-accent"
                 >
                   Admin
                 </Link>
@@ -159,7 +162,7 @@ export async function SiteHeader() {
             <>
               <Link
                 href="/login"
-                className="text-xs font-medium text-slate-600 hover:text-accent transition"
+                className="text-xs font-medium text-ink-muted hover:text-accent transition"
               >
                 Sign In
               </Link>
@@ -175,6 +178,7 @@ export async function SiteHeader() {
 
         {/* Mobile / Tablet Quick CTA & Drawer Toggle */}
         <div className="flex items-center gap-2 xl:hidden">
+          <ThemeToggle />
           <Link
             href="/live"
             className="flex items-center gap-1.5 rounded-full bg-red-600 px-3 py-1.5 text-xs font-bold text-white shadow-xs transition hover:bg-red-700"

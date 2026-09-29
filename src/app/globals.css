@@ -7,8 +7,8 @@
   --ink: #0f172a;
   --ink-muted: #475569;
   
-  /* The Brook Church Brand Palette */
-  --accent: #0066b2;          /* Primary Deep Ocean / Royal Blue */
+  /* The Brook Church Brand Palette (Light Mode) */
+  --accent: #0066b2;          /* Primary Royal Ocean Blue */
   --accent-dark: #004080;     /* Darker Navy Blue */
   --accent-light: #0284c7;    /* Vibrant Blue / Cyan highlight */
   --gold: #d97706;            /* Warm Amber / Gold for badges */
@@ -17,11 +17,31 @@
   --border: #e2e8f0;
   --surface-tint: #f0f5fa;    /* Soft Ice Blue tint */
   --surface-elevated: #ffffff;
+
+  --card-glass: rgba(255, 255, 255, 0.85);
+  --card-border: rgba(226, 232, 240, 0.8);
+}
+
+.dark {
+  --background: #060b14;      /* Deep Celestial Midnight */
+  --foreground: #f8fafc;
+  --paper: #0c1527;          /* Deep Sapphire Night Card */
+  --ink: #f8fafc;
+  --ink-muted: #94a3b8;
   
-  /* Hero Gradient */
-  --tbc-gradient-from: #0066b2;
-  --tbc-gradient-to: #431407;
-  --tbc-gradient-purple: #5e2590;
+  /* The Brook Church Brand Palette (Dark Mode - Futuristic Glow) */
+  --accent: #38bdf8;          /* Bright Electric Cyan */
+  --accent-dark: #0284c7;
+  --accent-light: #7dd3fc;
+  --gold: #fbbf24;
+  --live: #ef4444;
+  
+  --border: #1e293b;
+  --surface-tint: #091120;
+  --surface-elevated: #111e38;
+
+  --card-glass: rgba(12, 21, 39, 0.75);
+  --card-border: rgba(56, 189, 248, 0.15);
 }
 
 @theme inline {
@@ -54,6 +74,7 @@ body {
   overflow-x: hidden;
   width: 100%;
   -webkit-tap-highlight-color: transparent;
+  transition: background-color 0.3s ease, color 0.3s ease;
 }
 
 .container-app {
@@ -75,25 +96,90 @@ body {
   }
 }
 
-/* Glassmorphism & custom utility classes */
+/* Futuristic Brand Gradients */
 .tbc-hero-gradient {
-  background: linear-gradient(135deg, #00529b 0%, #0066b2 40%, #5e2590 100%);
+  background: linear-gradient(135deg, #003b73 0%, #0066b2 45%, #4c1d95 100%);
+}
+
+.dark .tbc-hero-gradient {
+  background: linear-gradient(135deg, #021124 0%, #004b87 50%, #311059 100%);
 }
 
 .tbc-card-hover {
-  transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+  transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
 .tbc-card-hover:hover {
-  transform: translateY(-3px);
-  box-shadow: 0 12px 24px -10px rgba(0, 102, 178, 0.15);
+  transform: translateY(-4px);
+  box-shadow: 0 16px 32px -10px rgba(0, 102, 178, 0.2);
+}
+
+.dark .tbc-card-hover:hover {
+  box-shadow: 0 16px 32px -10px rgba(56, 189, 248, 0.25);
 }
 
 .tbc-glow {
-  box-shadow: 0 0 25px -5px rgba(0, 102, 178, 0.3);
+  box-shadow: 0 0 30px -5px rgba(0, 102, 178, 0.35);
 }
 
-/* Hide scrollbar for tabs */
+.dark .tbc-glow {
+  box-shadow: 0 0 35px -5px rgba(56, 189, 248, 0.35);
+}
+
+/* Glass card styling */
+.tbc-glass {
+  background: var(--card-glass);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid var(--card-border);
+}
+
+/* Futuristic Animated Aura & Mesh */
+@keyframes float {
+  0%, 100% {
+    transform: translateY(0px) rotate(0deg);
+  }
+  50% {
+    transform: translateY(-10px) rotate(1deg);
+  }
+}
+
+@keyframes pulseGlow {
+  0%, 100% {
+    opacity: 0.4;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 0.8;
+    transform: scale(1.05);
+  }
+}
+
+.animate-float {
+  animation: float 6s ease-in-out infinite;
+}
+
+.animate-pulse-glow {
+  animation: pulseGlow 4s ease-in-out infinite;
+}
+
+/* Audio wave bars */
+@keyframes soundWave {
+  0%, 100% {
+    height: 4px;
+  }
+  50% {
+    height: 20px;
+  }
+}
+
+.soundwave-bar:nth-child(1) { animation: soundWave 0.9s ease-in-out infinite 0.1s; }
+.soundwave-bar:nth-child(2) { animation: soundWave 0.7s ease-in-out infinite 0.3s; }
+.soundwave-bar:nth-child(3) { animation: soundWave 1.1s ease-in-out infinite 0.2s; }
+.soundwave-bar:nth-child(4) { animation: soundWave 0.8s ease-in-out infinite 0.4s; }
+.soundwave-bar:nth-child(5) { animation: soundWave 1.0s ease-in-out infinite 0.15s; }
+
+/* Hide scrollbar */
 .no-scrollbar::-webkit-scrollbar {
   display: none;
 }
