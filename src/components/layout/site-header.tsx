@@ -122,8 +122,8 @@ export async function SiteHeader() {
           </div>
         </nav>
 
-        {/* Right CTAs */}
-        <div className="hidden items-center gap-3 lg:flex">
+        {/* Right CTAs (Desktop) */}
+        <div className="hidden items-center gap-3 xl:flex">
           <Link
             href="/live"
             className="flex items-center gap-1.5 rounded-full bg-red-600 px-4 py-1.5 text-xs font-bold text-white shadow-xs transition hover:bg-red-700"
@@ -173,7 +173,17 @@ export async function SiteHeader() {
           )}
         </div>
 
-        <MobileNav links={NAV_LINKS} isSignedIn={Boolean(user)} />
+        {/* Mobile / Tablet Quick CTA & Drawer Toggle */}
+        <div className="flex items-center gap-2 xl:hidden">
+          <Link
+            href="/live"
+            className="flex items-center gap-1.5 rounded-full bg-red-600 px-3 py-1.5 text-xs font-bold text-white shadow-xs transition hover:bg-red-700"
+          >
+            <span className="h-2 w-2 rounded-full bg-white animate-pulse" />
+            Live
+          </Link>
+          <MobileNav links={NAV_LINKS} isSignedIn={Boolean(user)} />
+        </div>
       </div>
     </header>
   );

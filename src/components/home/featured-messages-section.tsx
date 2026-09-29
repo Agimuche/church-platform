@@ -248,13 +248,13 @@ export function FeaturedMessagesSection() {
       </div>
 
       {/* Channel Channels Bar & Filter Tabs */}
-      <div className="mt-8 flex flex-wrap items-center justify-between gap-4 border-b border-slate-200 pb-4">
-        {/* Filter buttons */}
-        <div className="flex flex-wrap items-center gap-2">
+      <div className="mt-8 flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4 border-b border-slate-200 pb-4">
+        {/* Filter buttons with touch-friendly responsive scroll */}
+        <div className="flex items-center gap-2 overflow-x-auto pb-1.5 sm:pb-0 no-scrollbar flex-nowrap sm:flex-wrap">
           <button
             type="button"
             onClick={() => setActivePlatform("all")}
-            className={`rounded-full px-4 py-1.5 text-xs font-semibold transition ${
+            className={`whitespace-nowrap rounded-full px-4 py-1.5 text-xs font-semibold transition shrink-0 ${
               activePlatform === "all"
                 ? "bg-slate-900 text-white shadow-xs"
                 : "bg-slate-100 text-slate-700 hover:bg-slate-200"
@@ -266,7 +266,7 @@ export function FeaturedMessagesSection() {
           <button
             type="button"
             onClick={() => setActivePlatform("youtube")}
-            className={`inline-flex items-center gap-1.5 rounded-full px-4 py-1.5 text-xs font-semibold transition ${
+            className={`whitespace-nowrap shrink-0 inline-flex items-center gap-1.5 rounded-full px-4 py-1.5 text-xs font-semibold transition ${
               activePlatform === "youtube"
                 ? "bg-red-600 text-white shadow-xs"
                 : "bg-red-50 text-red-700 hover:bg-red-100"
@@ -281,7 +281,7 @@ export function FeaturedMessagesSection() {
           <button
             type="button"
             onClick={() => setActivePlatform("facebook")}
-            className={`inline-flex items-center gap-1.5 rounded-full px-4 py-1.5 text-xs font-semibold transition ${
+            className={`whitespace-nowrap shrink-0 inline-flex items-center gap-1.5 rounded-full px-4 py-1.5 text-xs font-semibold transition ${
               activePlatform === "facebook"
                 ? "bg-blue-600 text-white shadow-xs"
                 : "bg-blue-50 text-blue-700 hover:bg-blue-100"
@@ -296,7 +296,7 @@ export function FeaturedMessagesSection() {
           <button
             type="button"
             onClick={() => setActivePlatform("instagram")}
-            className={`inline-flex items-center gap-1.5 rounded-full px-4 py-1.5 text-xs font-semibold transition ${
+            className={`whitespace-nowrap shrink-0 inline-flex items-center gap-1.5 rounded-full px-4 py-1.5 text-xs font-semibold transition ${
               activePlatform === "instagram"
                 ? "bg-gradient-to-r from-purple-600 via-pink-600 to-amber-500 text-white shadow-xs"
                 : "bg-pink-50 text-pink-700 hover:bg-pink-100"
@@ -310,7 +310,7 @@ export function FeaturedMessagesSection() {
         </div>
 
         {/* Channel Direct Connect Quick Links */}
-        <div className="flex items-center gap-2 text-xs font-semibold">
+        <div className="flex flex-wrap items-center gap-2 text-xs font-semibold">
           <span className="text-slate-400">Follow Channels:</span>
           <a
             href="https://www.youtube.com/@thebrookchurchng"

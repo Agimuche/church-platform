@@ -240,17 +240,17 @@ export default function VideosPage() {
 
         {/* Live Stream CTA */}
         <section className="mt-8">
-          <div className="flex items-center justify-between rounded-2xl border border-red-100 bg-red-50 p-6">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 rounded-2xl border border-red-100 bg-red-50 p-5 sm:p-6">
             <div className="flex items-center gap-4">
-              <span className="h-3 w-3 rounded-full bg-red-600 animate-pulse" />
+              <span className="h-3 w-3 shrink-0 rounded-full bg-red-600 animate-pulse" />
               <div>
                 <p className="font-bold text-slate-900">Watch Us Live</p>
-                <p className="text-sm text-slate-600">Join our Sunday services live — Phronesis (8 AM) &amp; Doxa (9:15 AM)</p>
+                <p className="text-xs sm:text-sm text-slate-600">Join our Sunday services live — Phronesis (8 AM) &amp; Doxa (9:15 AM)</p>
               </div>
             </div>
             <Link
               href="/live"
-              className="rounded-full bg-red-600 px-5 py-2 text-xs font-bold text-white shadow-xs transition hover:bg-red-700"
+              className="self-start sm:self-auto shrink-0 rounded-full bg-red-600 px-5 py-2 text-xs font-bold text-white shadow-xs transition hover:bg-red-700"
             >
               Go Live →
             </Link>
