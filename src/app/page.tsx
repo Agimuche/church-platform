@@ -7,6 +7,7 @@ import { Badge } from "@/components/ui/badge";
 import { LinkButton } from "@/components/ui/button";
 import { MediaCard } from "@/components/ui/media-card";
 import { formatCurrency, formatDate } from "@/lib/utils";
+import { FeaturedMessagesSection } from "@/components/home/featured-messages-section";
 
 export const dynamic = "force-dynamic";
 
@@ -271,56 +272,8 @@ export default async function HomePage() {
         </div>
       </section>
 
-      {/* 5. Latest Messages / Sermon Archive */}
-      {heroSermon && (
-        <section className="container-app">
-          <div className="flex items-end justify-between">
-            <div>
-              <span className="text-xs font-bold uppercase tracking-wider text-sky-600">
-                Word &amp; Doctrine
-              </span>
-              <h2 className="font-serif text-2xl font-bold text-slate-900 sm:text-3xl">
-                Featured Messages
-              </h2>
-            </div>
-            <Link
-              href="/sermons"
-              className="text-sm font-semibold text-sky-600 hover:text-sky-800 transition"
-            >
-              View all sermons →
-            </Link>
-          </div>
-
-          <div className="mt-8 grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
-            <div className="sm:col-span-2 lg:col-span-2">
-              <MediaCard
-                href={`/sermons/${heroSermon.slug}`}
-                title={heroSermon.title}
-                thumbnailUrl={heroSermon.thumbnailUrl}
-                speakerName={heroSermon.speaker?.name ?? "Pastor Ose Imiemohon"}
-                publishedAt={heroSermon.publishedAt}
-                durationSeconds={heroSermon.durationSeconds}
-                price={heroSermon.price?.toString()}
-              />
-            </div>
-            {recentSermons.items
-              .filter((s) => s.id !== heroSermon.id)
-              .slice(0, 2)
-              .map((sermon) => (
-                <MediaCard
-                  key={sermon.id}
-                  href={`/sermons/${sermon.slug}`}
-                  title={sermon.title}
-                  thumbnailUrl={sermon.thumbnailUrl}
-                  speakerName={sermon.speaker?.name ?? "The Brook Church Ministers"}
-                  publishedAt={sermon.publishedAt}
-                  durationSeconds={sermon.durationSeconds}
-                  price={sermon.price?.toString()}
-                />
-              ))}
-          </div>
-        </section>
-      )}
+      {/* 5. Featured Messages (YouTube, Facebook, Instagram) */}
+      <FeaturedMessagesSection />
 
       {/* 6. TBC Store Spotlight (ELDAD Devotional & Books) */}
       {products.length > 0 && (
