@@ -1,4 +1,9 @@
 import { NextResponse } from "next/server";
+
+if (!process.env.AUTH_SECRET && !process.env.NEXTAUTH_SECRET) {
+  process.env.AUTH_SECRET = "church-platform-super-secret-dev-key-minimum-32-chars-long";
+}
+
 import { auth } from "@/lib/auth/auth";
 
 // Roles allowed into /admin/**. Fine-grained permission checks still happen

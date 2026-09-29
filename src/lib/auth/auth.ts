@@ -6,6 +6,10 @@ import { prisma } from "@/lib/db/prisma";
 import { loginSchema } from "@/lib/validation/auth";
 import type { Role } from "@prisma/client";
 
+if (!process.env.AUTH_SECRET && !process.env.NEXTAUTH_SECRET) {
+  process.env.AUTH_SECRET = "church-platform-super-secret-dev-key-minimum-32-chars-long";
+}
+
 export const { handlers, auth, signIn, signOut } = NextAuth({
   adapter: PrismaAdapter(prisma),
   session: { strategy: "jwt" },
