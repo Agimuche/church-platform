@@ -88,7 +88,14 @@ export function MobileNav({
             </div>
 
             {/* Quick Action CTAs */}
-            <div className="p-4 space-y-2 border-b border-slate-100 bg-slate-50">
+            <div className="p-4 space-y-2 border-b border-border bg-surface-tint">
+              <Link
+                href="/admin"
+                onClick={() => setOpen(false)}
+                className="flex items-center justify-center gap-2 w-full rounded-xl bg-accent/15 border border-accent/30 py-2.5 text-xs font-bold text-accent shadow-xs transition hover:bg-accent hover:text-white"
+              >
+                <span>⚙️ Church Admin Portal</span>
+              </Link>
               <Link
                 href="/live"
                 onClick={() => setOpen(false)}
@@ -131,7 +138,14 @@ export function MobileNav({
             </nav>
 
             {/* Account / Sign-in */}
-            <div className="border-t border-slate-100 p-4 bg-slate-50">
+            <div className="border-t border-slate-100 p-4 bg-slate-50 space-y-2">
+              <Link
+                href="/login?callbackUrl=/admin"
+                onClick={() => setOpen(false)}
+                className="flex items-center justify-center gap-1.5 rounded-xl border border-sky-600/30 bg-sky-50/80 py-2 text-xs font-bold text-sky-700 hover:bg-sky-100 transition"
+              >
+                <span>⚡ Admin Portal &amp; Dashboard</span>
+              </Link>
               {isSignedIn ? (
                 <Link
                   href="/account"

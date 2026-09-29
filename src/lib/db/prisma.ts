@@ -16,8 +16,8 @@ function createInitialStore(): Record<string, any[]> {
 
   const superAdmin = {
     id: "user-super-admin",
-    name: "The Brook Church Admin",
-    email: process.env.SEED_SUPER_ADMIN_EMAIL ?? "admin@church.local",
+    name: "The Brook Church Super Admin",
+    email: "admin@thebrookchurch.org",
     passwordHash: adminPasswordHash,
     role: "SUPER_ADMIN",
     isActive: true,
@@ -25,6 +25,76 @@ function createInitialStore(): Record<string, any[]> {
     updatedAt: new Date("2026-01-01T00:00:00Z"),
     deletedAt: null,
   };
+
+  const adminUsers = [
+    superAdmin,
+    {
+      id: "user-super-admin-owner",
+      name: "Agim Uche (Lead Admin)",
+      email: "agimuche1@gmail.com",
+      passwordHash: adminPasswordHash,
+      role: "SUPER_ADMIN",
+      isActive: true,
+      createdAt: new Date("2026-01-01T00:00:00Z"),
+      updatedAt: new Date("2026-01-01T00:00:00Z"),
+      deletedAt: null,
+    },
+    {
+      id: "user-super-admin-local",
+      name: "System Super Admin",
+      email: "admin@church.local",
+      passwordHash: adminPasswordHash,
+      role: "SUPER_ADMIN",
+      isActive: true,
+      createdAt: new Date("2026-01-01T00:00:00Z"),
+      updatedAt: new Date("2026-01-01T00:00:00Z"),
+      deletedAt: null,
+    },
+    {
+      id: "user-super-admin-ng",
+      name: "The Brook Church Nigeria",
+      email: "admin@thebrookchurch.ng",
+      passwordHash: adminPasswordHash,
+      role: "SUPER_ADMIN",
+      isActive: true,
+      createdAt: new Date("2026-01-01T00:00:00Z"),
+      updatedAt: new Date("2026-01-01T00:00:00Z"),
+      deletedAt: null,
+    },
+    {
+      id: "user-pastor-ose",
+      name: "Pastor Ose Imiemohon",
+      email: "pastor.ose@thebrookchurch.org",
+      passwordHash: adminPasswordHash,
+      role: "PASTOR",
+      isActive: true,
+      createdAt: new Date("2026-01-01T00:00:00Z"),
+      updatedAt: new Date("2026-01-01T00:00:00Z"),
+      deletedAt: null,
+    },
+    {
+      id: "user-pastor-naomi",
+      name: "Pastor Naomi Imiemohon",
+      email: "pastor.naomi@thebrookchurch.org",
+      passwordHash: adminPasswordHash,
+      role: "PASTOR",
+      isActive: true,
+      createdAt: new Date("2026-01-01T00:00:00Z"),
+      updatedAt: new Date("2026-01-01T00:00:00Z"),
+      deletedAt: null,
+    },
+    {
+      id: "user-media-team",
+      name: "TBC Media & Broadcast Team",
+      email: "media@thebrookchurch.org",
+      passwordHash: adminPasswordHash,
+      role: "MEDIA_TEAM",
+      isActive: true,
+      createdAt: new Date("2026-01-01T00:00:00Z"),
+      updatedAt: new Date("2026-01-01T00:00:00Z"),
+      deletedAt: null,
+    },
+  ];
 
   const speakers = [
     {
@@ -378,7 +448,7 @@ function createInitialStore(): Record<string, any[]> {
   ];
 
   return {
-    user: [superAdmin],
+    user: adminUsers,
     speaker: speakers,
     category: categories,
     tag: [],

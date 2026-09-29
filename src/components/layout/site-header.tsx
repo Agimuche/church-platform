@@ -146,9 +146,9 @@ export async function SiteHeader() {
               {user.role && ADMIN_ROLES.has(user.role) && (
                 <Link
                   href="/admin"
-                  className="rounded-full border border-border px-3.5 py-1.5 text-xs font-medium text-ink transition hover:border-accent hover:text-accent"
+                  className="rounded-full bg-accent/15 border border-accent/30 px-3.5 py-1.5 text-xs font-bold text-accent transition hover:bg-accent hover:text-white"
                 >
-                  Admin
+                  Admin Portal
                 </Link>
               )}
               <Link
@@ -160,6 +160,12 @@ export async function SiteHeader() {
             </>
           ) : (
             <>
+              <Link
+                href="/login?callbackUrl=/admin"
+                className="rounded-full border border-border px-3.5 py-1.5 text-xs font-semibold text-ink transition hover:border-accent hover:text-accent"
+              >
+                Admin Portal
+              </Link>
               <Link
                 href="/login"
                 className="text-xs font-medium text-ink-muted hover:text-accent transition"
