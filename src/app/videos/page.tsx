@@ -1,5 +1,6 @@
 import Image from "next/image";
 import Link from "next/link";
+import { VideosPlayerWithCaptions } from "@/components/videos/videos-player-with-captions";
 
 export const metadata = {
   title: "YouTube Videos | The Brook Church",
@@ -196,21 +197,12 @@ export default function VideosPage() {
             </a>
           </div>
 
-          <div className="overflow-hidden rounded-3xl border border-slate-200 bg-slate-950 shadow-2xl">
-            <div className="aspect-video w-full">
-              <iframe
-                src={`https://www.youtube.com/embed/${YOUTUBE_VIDEOS[0].id}?rel=0&modestbranding=1`}
-                title={YOUTUBE_VIDEOS[0].title}
-                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
-                allowFullScreen
-                className="w-full h-full"
-              />
-            </div>
-          </div>
-          <div className="mt-4 rounded-2xl border border-slate-200 bg-white p-4 shadow-xs">
-            <h3 className="font-serif text-lg font-bold text-slate-900">{YOUTUBE_VIDEOS[0].title}</h3>
-            <p className="mt-1 text-sm text-slate-600">{YOUTUBE_VIDEOS[0].description}</p>
-          </div>
+          <VideosPlayerWithCaptions
+            videoId={YOUTUBE_VIDEOS[0].id}
+            title={YOUTUBE_VIDEOS[0].title}
+            description={YOUTUBE_VIDEOS[0].description}
+            publishedAt={YOUTUBE_VIDEOS[0].publishedAt}
+          />
         </section>
 
         {/* Video Grid */}
