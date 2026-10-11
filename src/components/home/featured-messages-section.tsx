@@ -243,33 +243,33 @@ export function FeaturedMessagesSection() {
       <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
         <div>
           <div className="flex items-center gap-2">
-            <span className="inline-flex items-center gap-1.5 rounded-full bg-sky-100 px-3 py-1 text-xs font-semibold text-sky-800">
-              <span className="h-1.5 w-1.5 rounded-full bg-sky-600 animate-pulse" />
+            <span className="inline-flex items-center gap-1.5 rounded-full bg-accent/15 px-3 py-1 text-xs font-semibold text-accent">
+              <span className="h-1.5 w-1.5 rounded-full bg-accent animate-pulse" />
               Multi-Channel Broadcasts
             </span>
-            <span className="text-xs font-medium text-slate-500">
+            <span className="text-xs font-medium text-ink-muted">
               YouTube &bull; Facebook &bull; Instagram
             </span>
           </div>
-          <h2 className="mt-2 font-serif text-3xl font-bold tracking-tight text-slate-900 sm:text-4xl">
+          <h2 className="mt-2 font-serif text-3xl font-bold tracking-tight text-ink sm:text-4xl">
             Featured Messages
           </h2>
-          <p className="mt-1 text-sm text-slate-600 max-w-2xl">
-            Watch and listen to life-transforming messages and revelatory teachings from Pastor Ose &amp; Pastor Naomi Imiemohon across all our official streaming channels.
+          <p className="mt-1 text-sm text-ink-muted max-w-2xl">
+            Watch and listen to messages and revelatory teachings from Pastors Ose &amp; Naomi Imiemohon across our official streaming channels.
           </p>
         </div>
 
         <div className="flex items-center gap-3">
           <Link
             href="/videos"
-            className="text-sm font-semibold text-sky-600 hover:text-sky-800 transition"
+            className="text-sm font-semibold text-accent hover:text-accent-dark transition"
           >
             Video Archive →
           </Link>
           <span className="text-slate-300">|</span>
           <Link
             href="/sermons"
-            className="text-sm font-semibold text-sky-600 hover:text-sky-800 transition"
+            className="text-sm font-semibold text-accent hover:text-accent-dark transition"
           >
             All Sermons →
           </Link>
@@ -277,7 +277,7 @@ export function FeaturedMessagesSection() {
       </div>
 
       {/* Channel Channels Bar & Filter Tabs */}
-      <div className="mt-8 flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4 border-b border-slate-200 pb-4">
+      <div className="mt-8 flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4 border-b border-border pb-4">
         {/* Filter buttons with touch-friendly responsive scroll */}
         <div className="flex items-center gap-2 overflow-x-auto pb-1.5 sm:pb-0 no-scrollbar flex-nowrap sm:flex-wrap">
           <button
@@ -285,8 +285,8 @@ export function FeaturedMessagesSection() {
             onClick={() => setActivePlatform("all")}
             className={`whitespace-nowrap rounded-full px-4 py-1.5 text-xs font-semibold transition shrink-0 ${
               activePlatform === "all"
-                ? "bg-slate-900 text-white shadow-xs"
-                : "bg-slate-100 text-slate-700 hover:bg-slate-200"
+                ? "bg-slate-900 dark:bg-accent text-white shadow-xs"
+                : "bg-surface-tint text-ink-muted hover:bg-border"
             }`}
           >
             All Messages ({FEATURED_MESSAGES_DATA.length})
@@ -374,10 +374,10 @@ export function FeaturedMessagesSection() {
       <div className="mt-8 space-y-8">
         {/* Spotlight Hero Card */}
         {heroMessage && (
-          <div className="relative overflow-hidden rounded-3xl border border-slate-200 bg-white shadow-xl transition-all hover:shadow-2xl">
+          <div className="relative overflow-hidden rounded-3xl border border-border bg-paper shadow-lg transition-all hover:shadow-xl">
             <div className="grid gap-6 lg:grid-cols-12 lg:items-center">
               {/* Media Preview Column */}
-              <div className="relative aspect-video w-full overflow-hidden bg-slate-900 lg:col-span-7">
+              <div className="relative aspect-video w-full overflow-hidden bg-slate-950 lg:col-span-7">
                 <Image
                   src={heroMessage.thumbnailUrl}
                   alt={heroMessage.title}
@@ -435,33 +435,33 @@ export function FeaturedMessagesSection() {
               {/* Information Column */}
               <div className="p-6 lg:p-8 lg:col-span-5 flex flex-col justify-between">
                 <div>
-                  <div className="flex items-center gap-2 text-xs font-semibold text-sky-700">
+                  <div className="flex items-center gap-2 text-xs font-semibold text-accent">
                     <span>{heroMessage.program}</span>
                     <span>&bull;</span>
                     <span>{heroMessage.date}</span>
                   </div>
 
-                  <h3 className="mt-2 font-serif text-2xl font-bold text-slate-900 leading-snug">
+                  <h3 className="mt-2 font-serif text-2xl font-bold text-ink leading-snug">
                     {heroMessage.title}
                   </h3>
 
-                  <p className="mt-1 text-sm font-medium text-slate-500">
+                  <p className="mt-1 text-sm font-medium text-ink-muted">
                     {heroMessage.subtitle}
                   </p>
 
-                  <p className="mt-3 text-sm text-slate-600 leading-relaxed">
+                  <p className="mt-3 text-sm text-ink-muted leading-relaxed">
                     {heroMessage.summary}
                   </p>
 
                   {heroMessage.scripture && (
-                    <div className="mt-4 rounded-xl bg-slate-50 border border-slate-200/80 p-3 text-xs text-slate-700">
-                      <span className="font-semibold text-slate-900">Scripture Reference: </span>
+                    <div className="mt-4 rounded-xl bg-surface-tint border border-border p-3 text-xs text-ink-muted">
+                      <span className="font-semibold text-ink">Scripture: </span>
                       <span className="italic">{heroMessage.scripture}</span>
                     </div>
                   )}
 
-                  <div className="mt-4 flex items-center gap-3 text-xs text-slate-500">
-                    <span className="font-semibold text-slate-800">{heroMessage.speaker}</span>
+                  <div className="mt-4 flex items-center gap-3 text-xs text-ink-muted">
+                    <span className="font-semibold text-ink">{heroMessage.speaker}</span>
                     {heroMessage.viewsOrEngagement && (
                       <>
                         <span>&bull;</span>
@@ -471,7 +471,7 @@ export function FeaturedMessagesSection() {
                   </div>
                 </div>
 
-                <div className="mt-6 flex flex-wrap items-center gap-3 pt-4 border-slate-100">
+                <div className="mt-6 flex flex-wrap items-center gap-3 pt-4 border-t border-border">
                   {heroMessage.youtubeId || heroMessage.platform === "facebook" ? (
                     <button
                       type="button"
@@ -493,7 +493,7 @@ export function FeaturedMessagesSection() {
                     href={heroMessage.url}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="inline-flex items-center gap-1.5 rounded-full border border-slate-300 bg-white px-4 py-2 text-xs font-semibold text-slate-700 transition hover:bg-slate-50 hover:text-slate-900"
+                    className="inline-flex items-center gap-1.5 rounded-full border border-border bg-paper px-4 py-2 text-xs font-semibold text-ink transition hover:bg-surface-tint"
                   >
                     Open on {heroMessage.platform === "youtube" ? "YouTube" : heroMessage.platform === "facebook" ? "Facebook" : "Instagram"} ↗
                   </a>
@@ -508,7 +508,7 @@ export function FeaturedMessagesSection() {
           {gridMessages.map((msg) => (
             <div
               key={msg.id}
-              className="group flex flex-col justify-between overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-xs transition-all duration-300 hover:shadow-lg hover:border-slate-300"
+              className="group flex flex-col justify-between overflow-hidden rounded-2xl border border-border bg-paper shadow-xs transition-all duration-300 hover:shadow-lg hover:border-accent/40"
             >
               <div>
                 {/* Media Thumbnail Container */}
@@ -562,21 +562,21 @@ export function FeaturedMessagesSection() {
 
                 {/* Card Body */}
                 <div className="p-5">
-                  <div className="flex items-center justify-between text-xs text-slate-500">
-                    <span className="font-semibold text-sky-700">{msg.program}</span>
+                  <div className="flex items-center justify-between text-xs text-ink-muted">
+                    <span className="font-semibold text-accent">{msg.program}</span>
                     <span>{msg.date}</span>
                   </div>
 
-                  <h4 className="mt-2 line-clamp-2 font-serif text-lg font-bold text-slate-900 group-hover:text-sky-700 transition">
+                  <h4 className="mt-2 line-clamp-2 font-serif text-lg font-bold text-ink group-hover:text-accent transition">
                     {msg.title}
                   </h4>
 
-                  <p className="mt-1.5 line-clamp-2 text-xs text-slate-600 leading-relaxed">
+                  <p className="mt-1.5 line-clamp-2 text-xs text-ink-muted leading-relaxed">
                     {msg.summary}
                   </p>
 
                   {msg.scripture && (
-                    <p className="mt-2 text-xs italic text-slate-500 font-mono">
+                    <p className="mt-2 text-xs italic text-ink-muted font-mono">
                       📖 {msg.scripture}
                     </p>
                   )}
@@ -584,13 +584,13 @@ export function FeaturedMessagesSection() {
               </div>
 
               {/* Card Footer */}
-              <div className="border-t border-slate-100 p-4 bg-slate-50/50 flex items-center justify-between text-xs">
-                <span className="font-semibold text-slate-700">{msg.speaker}</span>
+              <div className="border-t border-border p-4 bg-surface-tint flex items-center justify-between text-xs">
+                <span className="font-semibold text-ink-muted">{msg.speaker}</span>
                 <a
                   href={msg.url}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="font-bold text-sky-600 hover:text-sky-800 hover:underline"
+                  className="font-bold text-accent hover:text-accent-dark hover:underline"
                 >
                   Watch ↗
                 </a>

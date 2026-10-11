@@ -21,15 +21,15 @@ export default async function LivePage() {
     <div className="bg-background py-8 sm:py-12 transition-colors">
       <div className="container-app">
         {/* Dual Live Stream Announcement Banner */}
-        <div className="mb-6 rounded-2xl border border-border bg-paper p-4 shadow-xs flex flex-col sm:flex-row items-center justify-between gap-3">
+        <div className="mb-8 rounded-2xl border border-border bg-paper p-4 shadow-xs flex flex-col sm:flex-row items-center justify-between gap-3">
           <div className="flex items-center gap-3">
             <span className="flex h-3 w-3 rounded-full bg-red-600 animate-pulse" />
             <div>
               <p className="text-xs font-bold uppercase tracking-wider text-ink">
-                Simultaneous Sanctuary Transmission
+                Sanctuary Live Broadcast
               </p>
               <p className="text-xs text-ink-muted">
-                Extracted &amp; streamed live on both <strong className="text-blue-600">Facebook Live</strong> and <strong className="text-red-600">YouTube Live</strong> from Calabar.
+                Streaming live on <strong className="text-blue-600">Facebook Live</strong> and <strong className="text-red-600">YouTube Live</strong> from Calabar.
               </p>
             </div>
           </div>
@@ -38,18 +38,18 @@ export default async function LivePage() {
               href={TBC_FACEBOOK_URL}
               target="_blank"
               rel="noopener noreferrer"
-              className="inline-flex items-center gap-1.5 rounded-full bg-blue-600 px-3.5 py-1.5 text-xs font-bold text-white hover:bg-blue-700 transition"
+              className="inline-flex items-center gap-1.5 rounded-full bg-blue-600 px-3.5 py-1.5 text-xs font-semibold text-white hover:bg-blue-700 transition shadow-xs"
             >
-              <span>📘 Facebook Live</span>
+              <span>Facebook</span>
               <ExternalLink className="h-3 w-3" />
             </a>
             <a
               href={TBC_YOUTUBE_URL}
               target="_blank"
               rel="noopener noreferrer"
-              className="inline-flex items-center gap-1.5 rounded-full bg-red-600 px-3.5 py-1.5 text-xs font-bold text-white hover:bg-red-700 transition"
+              className="inline-flex items-center gap-1.5 rounded-full bg-red-600 px-3.5 py-1.5 text-xs font-semibold text-white hover:bg-red-700 transition shadow-xs"
             >
-              <span>🔴 YouTube Live</span>
+              <span>YouTube</span>
               <ExternalLink className="h-3 w-3" />
             </a>
           </div>

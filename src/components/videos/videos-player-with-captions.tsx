@@ -354,15 +354,15 @@ export function VideosPlayerWithCaptions({
               type="button"
               onClick={handleDownloadWord}
               disabled={downloadingFormat === "word" || isGeneratingNotes}
-              className="flex items-center gap-1.5 rounded-xl bg-blue-700 hover:bg-blue-800 text-white px-3.5 py-2 text-xs font-bold shadow-xs transition active:scale-95 disabled:opacity-50"
-              title="Download Sermon Notes in MS Word (.docx) format"
+              className="flex items-center gap-1.5 rounded-full bg-blue-700 hover:bg-blue-800 text-white px-4 py-2 text-xs font-semibold shadow-xs transition active:scale-95 disabled:opacity-50"
+              title="Download Sermon Notes in MS Word format"
             >
               {downloadingFormat === "word" || isGeneratingNotes ? (
                 <Loader2 className="h-3.5 w-3.5 animate-spin" />
               ) : (
                 <Download className="h-3.5 w-3.5" />
               )}
-              <span>MS Word (.docx)</span>
+              <span>Word (.docx)</span>
             </button>
 
             {/* Download PDF */}
@@ -370,7 +370,7 @@ export function VideosPlayerWithCaptions({
               type="button"
               onClick={handleDownloadPdf}
               disabled={downloadingFormat === "pdf" || isGeneratingNotes}
-              className="flex items-center gap-1.5 rounded-xl bg-rose-700 hover:bg-rose-800 text-white px-3.5 py-2 text-xs font-bold shadow-xs transition active:scale-95 disabled:opacity-50"
+              className="flex items-center gap-1.5 rounded-full bg-rose-700 hover:bg-rose-800 text-white px-4 py-2 text-xs font-semibold shadow-xs transition active:scale-95 disabled:opacity-50"
               title="Download Sermon Notes in PDF format"
             >
               {downloadingFormat === "pdf" ? (
@@ -378,16 +378,16 @@ export function VideosPlayerWithCaptions({
               ) : (
                 <Download className="h-3.5 w-3.5" />
               )}
-              <span>PDF</span>
+              <span>PDF Notes</span>
             </button>
 
             {/* Sanctuary Live Link */}
             <Link
               href="/live"
-              className="flex items-center gap-1.5 rounded-xl bg-amber-500 hover:bg-amber-600 text-slate-950 px-3.5 py-2 text-xs font-bold shadow-xs transition active:scale-95"
+              className="flex items-center gap-1.5 rounded-full bg-accent hover:bg-accent-dark text-white px-4 py-2 text-xs font-semibold shadow-xs transition active:scale-95"
             >
               <Sparkles className="h-3.5 w-3.5" />
-              <span>Full Live Sanctuary</span>
+              <span>Sanctuary Studio</span>
             </Link>
           </div>
         </div>

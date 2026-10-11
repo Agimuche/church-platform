@@ -73,14 +73,14 @@ export function MobileNav({
           {/* Drawer Menu Content */}
           <div className="relative ml-auto flex h-full w-full max-w-xs flex-col bg-white shadow-2xl overflow-y-auto">
             {/* Drawer Header */}
-            <div className="flex items-center justify-between border-b border-slate-100 p-4">
-              <span className="font-bold text-sm text-slate-900">
-                The Brook Church &bull; Menu
+            <div className="flex items-center justify-between border-b border-border p-4 bg-paper">
+              <span className="font-serif font-bold text-sm text-ink">
+                The Brook Church
               </span>
               <button
                 type="button"
                 onClick={() => setOpen(false)}
-                className="flex h-8 w-8 items-center justify-center rounded-full bg-slate-100 text-slate-600 hover:bg-slate-200"
+                className="flex h-8 w-8 items-center justify-center rounded-full bg-surface-tint text-ink-muted hover:text-ink hover:bg-border transition"
                 aria-label="Close menu"
               >
                 ✕
@@ -90,16 +90,9 @@ export function MobileNav({
             {/* Quick Action CTAs */}
             <div className="p-4 space-y-2 border-b border-border bg-surface-tint">
               <Link
-                href="/admin"
-                onClick={() => setOpen(false)}
-                className="flex items-center justify-center gap-2 w-full rounded-xl bg-accent/15 border border-accent/30 py-2.5 text-xs font-bold text-accent shadow-xs transition hover:bg-accent hover:text-white"
-              >
-                <span>⚙️ Church Admin Portal</span>
-              </Link>
-              <Link
                 href="/live"
                 onClick={() => setOpen(false)}
-                className="flex items-center justify-center gap-2 w-full rounded-xl bg-red-600 py-2.5 text-xs font-bold text-white shadow-sm transition hover:bg-red-700"
+                className="flex items-center justify-center gap-2 w-full rounded-xl bg-red-600 py-2.5 text-xs font-bold text-white shadow-xs transition hover:bg-red-700"
               >
                 <span className="h-2 w-2 rounded-full bg-white animate-pulse" />
                 Live Broadcast
@@ -107,14 +100,14 @@ export function MobileNav({
               <Link
                 href="/give"
                 onClick={() => setOpen(false)}
-                className="flex items-center justify-center gap-2 w-full rounded-xl bg-emerald-600 py-2.5 text-xs font-semibold text-white shadow-sm transition hover:bg-emerald-700"
+                className="flex items-center justify-center gap-2 w-full rounded-xl bg-emerald-600 py-2.5 text-xs font-semibold text-white shadow-xs transition hover:bg-emerald-700"
               >
-                Give Offering Online
+                Give Online
               </Link>
             </div>
 
             {/* Navigation Links */}
-            <nav className="flex-1 p-4 space-y-1">
+            <nav className="flex-1 p-4 space-y-1 bg-paper">
               {links.map((link) => {
                 const isActive = pathname === link.href;
                 return (
@@ -122,15 +115,15 @@ export function MobileNav({
                     key={link.href}
                     href={link.href}
                     onClick={() => setOpen(false)}
-                    className={`flex items-center justify-between rounded-xl px-3 py-2 text-sm font-medium transition ${
+                    className={`flex items-center justify-between rounded-xl px-3.5 py-2.5 text-sm font-medium transition ${
                       isActive
-                        ? "bg-sky-50 font-bold text-sky-700"
-                        : "text-slate-700 hover:bg-slate-50 hover:text-slate-900"
+                        ? "bg-accent/10 font-bold text-accent"
+                        : "text-ink hover:bg-surface-tint"
                     }`}
                   >
                     <span>{link.label}</span>
                     {isActive && (
-                      <span className="h-1.5 w-1.5 rounded-full bg-sky-600" />
+                      <span className="h-1.5 w-1.5 rounded-full bg-accent" />
                     )}
                   </Link>
                 );
@@ -138,66 +131,59 @@ export function MobileNav({
             </nav>
 
             {/* Account / Sign-in */}
-            <div className="border-t border-slate-100 p-4 bg-slate-50 space-y-2">
-              <Link
-                href="/login?callbackUrl=/admin"
-                onClick={() => setOpen(false)}
-                className="flex items-center justify-center gap-1.5 rounded-xl border border-sky-600/30 bg-sky-50/80 py-2 text-xs font-bold text-sky-700 hover:bg-sky-100 transition"
-              >
-                <span>⚡ Admin Portal &amp; Dashboard</span>
-              </Link>
+            <div className="border-t border-border p-4 bg-paper space-y-2.5">
               {isSignedIn ? (
                 <Link
                   href="/account"
                   onClick={() => setOpen(false)}
-                  className="flex items-center justify-center rounded-xl border border-sky-600 bg-white py-2 text-xs font-bold text-sky-700 hover:bg-sky-50"
+                  className="flex items-center justify-center rounded-xl bg-accent py-2.5 text-xs font-bold text-white shadow-xs hover:bg-accent-dark transition"
                 >
-                  My Account &amp; Profile
+                  My Account
                 </Link>
               ) : (
                 <div className="grid grid-cols-2 gap-2 text-xs">
                   <Link
                     href="/login"
                     onClick={() => setOpen(false)}
-                    className="flex items-center justify-center rounded-xl border border-slate-300 bg-white py-2 font-semibold text-slate-700 hover:bg-slate-100"
+                    className="flex items-center justify-center rounded-xl border border-border bg-paper py-2.5 font-semibold text-ink hover:bg-surface-tint transition"
                   >
-                    Sign in
+                    Sign In
                   </Link>
                   <Link
                     href="/register"
                     onClick={() => setOpen(false)}
-                    className="flex items-center justify-center rounded-xl bg-sky-600 py-2 font-bold text-white hover:bg-sky-700"
+                    className="flex items-center justify-center rounded-xl bg-accent py-2.5 font-bold text-white shadow-xs hover:bg-accent-dark transition"
                   >
-                    Join
+                    Join Us
                   </Link>
                 </div>
               )}
 
               {/* Social Channels in Drawer */}
-              <div className="mt-4 pt-4 border-t border-slate-200/80 flex items-center justify-around text-xs">
+              <div className="pt-3 border-t border-border flex items-center justify-around text-xs text-ink-muted">
                 <a
                   href="https://www.youtube.com/@thebrookchurchng"
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="text-red-600 font-semibold hover:underline"
+                  className="hover:text-red-500 font-medium transition"
                 >
                   YouTube
                 </a>
-                <span className="text-slate-300">&bull;</span>
+                <span>&bull;</span>
                 <a
                   href="https://web.facebook.com/thebrookchurchng/live_videos/"
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="text-blue-600 font-semibold hover:underline"
+                  className="hover:text-blue-500 font-medium transition"
                 >
-                  Facebook Live
+                  Facebook
                 </a>
-                <span className="text-slate-300">&bull;</span>
+                <span>&bull;</span>
                 <a
                   href="https://www.instagram.com/thebrookchurchng/"
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="text-pink-600 font-semibold hover:underline"
+                  className="hover:text-pink-500 font-medium transition"
                 >
                   Instagram
                 </a>

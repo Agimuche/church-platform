@@ -159,22 +159,22 @@ export function Hero3dVisual({
             {/* Top Bar Floating Status and Platform Toggle */}
             <div className="absolute top-3 left-3 right-3 z-20 flex items-center justify-between pointer-events-none">
               <div className="pointer-events-auto flex items-center gap-2">
-                <span className="inline-flex items-center gap-1.5 rounded-full bg-red-600/90 px-3 py-1 text-[11px] font-bold text-white shadow-lg backdrop-blur-md animate-pulse">
-                  <span className="h-2 w-2 rounded-full bg-white" />
-                  <span>LIVE TRANSMISSION</span>
+                <span className="inline-flex items-center gap-1.5 rounded-full bg-red-600 px-3 py-1 text-[11px] font-bold text-white shadow-lg backdrop-blur-md">
+                  <span className="h-1.5 w-1.5 rounded-full bg-white animate-pulse" />
+                  <span>LIVE</span>
                 </span>
-                <span className="hidden sm:inline-block rounded-full bg-black/60 px-2.5 py-0.5 text-[10px] font-medium text-slate-200 backdrop-blur-md">
-                  {liveTitle || "Zoe Life Conference Day 2"}
+                <span className="hidden md:inline-block rounded-full bg-black/70 px-2.5 py-0.5 text-[10px] font-medium text-slate-200 backdrop-blur-md">
+                  {liveTitle || "Zoe Life Service"}
                 </span>
               </div>
 
-              {/* Platform Switcher, CC Toggle & Sanctuary Link */}
-              <div className="pointer-events-auto flex items-center gap-1.5 bg-black/70 p-1 rounded-full backdrop-blur-md border border-white/10 text-[10px] font-bold">
+              {/* Platform Switcher & CC Toggle */}
+              <div className="pointer-events-auto flex items-center gap-1 bg-black/75 p-1 rounded-full backdrop-blur-md border border-white/10 text-[11px] font-medium">
                 <button
                   type="button"
                   onClick={() => setShowCaptions(!showCaptions)}
                   title="Toggle Live Captions (CC)"
-                  className={`flex items-center gap-1 px-2 py-0.5 rounded-full transition ${
+                  className={`flex items-center gap-1 px-2.5 py-0.5 rounded-full transition ${
                     showCaptions ? "bg-amber-400 text-slate-950 font-bold" : "text-slate-300 hover:text-white"
                   }`}
                 >
@@ -185,7 +185,7 @@ export function Hero3dVisual({
                   type="button"
                   onClick={() => setPlatform("youtube")}
                   className={`px-2.5 py-0.5 rounded-full transition ${
-                    platform === "youtube" ? "bg-red-600 text-white" : "text-slate-300 hover:text-white"
+                    platform === "youtube" ? "bg-red-600 text-white font-bold" : "text-slate-300 hover:text-white"
                   }`}
                 >
                   YouTube
@@ -194,40 +194,32 @@ export function Hero3dVisual({
                   type="button"
                   onClick={() => setPlatform("facebook")}
                   className={`px-2.5 py-0.5 rounded-full transition ${
-                    platform === "facebook" ? "bg-blue-600 text-white" : "text-slate-300 hover:text-white"
+                    platform === "facebook" ? "bg-blue-600 text-white font-bold" : "text-slate-300 hover:text-white"
                   }`}
                 >
                   Facebook
                 </button>
-                <Link
-                  href="/live"
-                  className="ml-1 px-2.5 py-0.5 rounded-full bg-white/20 text-white hover:bg-white/30 transition flex items-center gap-1"
-                >
-                  <span>Sanctuary</span>
-                  <span>→</span>
-                </Link>
               </div>
             </div>
 
             {/* Live Captions Subtitle Overlay Banner in Hero Player */}
             {showCaptions && currentCaption && (
               <div className="pointer-events-auto absolute bottom-3 left-3 right-3 sm:left-6 sm:right-6 z-25 flex flex-col items-center">
-                <div className="max-w-xl w-full rounded-2xl bg-black/85 backdrop-blur-md px-4 py-2 border border-white/20 shadow-2xl text-center">
-                  <div className="flex items-center justify-between gap-1 mb-0.5">
-                    <span className="flex items-center gap-1 text-[10px] font-bold text-amber-300">
+                <div className="max-w-lg w-full rounded-2xl bg-black/85 backdrop-blur-md px-3.5 py-2 border border-white/15 shadow-2xl text-center">
+                  <div className="flex items-center justify-between gap-1 mb-0.5 text-[10px]">
+                    <span className="flex items-center gap-1 font-semibold text-amber-300">
                       <span className="h-1.5 w-1.5 rounded-full bg-red-500 animate-pulse" />
-                      <span>LIVE CAPTION</span>
-                      <span className="text-slate-300 font-normal">• {currentCaption.speaker}</span>
+                      <span>Live Captions &bull; {currentCaption.speaker}</span>
                     </span>
                     <Link
                       href="/live"
-                      className="text-[10px] font-bold text-sky-300 hover:underline flex items-center gap-0.5"
+                      className="font-medium text-sky-300 hover:underline flex items-center gap-0.5"
                     >
                       <Sparkles className="h-2.5 w-2.5" />
-                      <span>Make Sermon Notes &rarr;</span>
+                      <span>Sermon Notes &rarr;</span>
                     </Link>
                   </div>
-                  <p className="text-xs sm:text-sm font-medium text-white line-clamp-2">
+                  <p className="text-xs sm:text-[13px] font-medium text-white line-clamp-2">
                     &ldquo;{currentCaption.text}&rdquo;
                   </p>
                 </div>

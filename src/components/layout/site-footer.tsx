@@ -3,16 +3,16 @@ import Image from "next/image";
 
 export function SiteFooter() {
   return (
-    <footer className="border-t border-slate-200 bg-slate-900 text-slate-300">
+    <footer className="border-t border-border bg-slate-950 text-slate-300">
       {/* Top Banner: Join in Person or Online */}
-      <div className="border-b border-slate-800 bg-slate-950 py-8">
+      <div className="border-b border-slate-900 bg-slate-950/80 py-8">
         <div className="container-app flex flex-col items-center justify-between gap-6 sm:flex-row">
           <div>
-            <p className="text-sm font-semibold tracking-wider uppercase text-sky-400">
+            <p className="text-xs font-bold tracking-wider uppercase text-sky-400">
               An Unfolding Story of God&apos;s Grace
             </p>
-            <h3 className="mt-1 text-xl font-bold text-white">
-              Join us this week at The Brook Church, Calabar
+            <h3 className="mt-1 font-serif text-xl font-bold text-white">
+              Worship with us at The Brook Church, Calabar
             </h3>
           </div>
           <div className="flex flex-wrap gap-3">
@@ -25,7 +25,7 @@ export function SiteFooter() {
             </Link>
             <Link
               href="/give"
-              className="rounded-full bg-sky-600 px-5 py-2 text-xs font-semibold text-white shadow-xs transition hover:bg-sky-500"
+              className="rounded-full bg-accent px-5 py-2 text-xs font-semibold text-white shadow-xs transition hover:bg-accent-dark"
             >
               Give Online
             </Link>
