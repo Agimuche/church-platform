@@ -18,6 +18,12 @@ import {
   Check,
   Sparkles,
   ExternalLink,
+  Download,
+  Printer,
+  Copy,
+  Radio,
+  RotateCcw,
+  Loader2,
 } from "lucide-react";
 import { motion, AnimatePresence } from "motion/react";
 import {
@@ -29,6 +35,11 @@ import {
   TBC_DEFAULT_CURRENT_SERVICE_YOUTUBE_ID,
   SERVICE_BROADCAST_PRESETS,
 } from "@/lib/utils/stream-extractor";
+import {
+  exportToWordDocx,
+  exportToPdf,
+  printSermonNotes,
+} from "@/lib/utils/sermon-exporter";
 
 interface LiveStreamProps {
   initialTitle?: string;
@@ -147,8 +158,162 @@ export function LiveStreamPlayer({
   const [inputMsg, setInputMsg] = useState("");
   const [copiedLink, setCopiedLink] = useState(false);
 
-  // Notes state
-  const [notes, setNotes] = useState("");
+  // Notes state & automated note-making
+  const [notes, setNotes] = useState(() => {
+    if (typeof window !== "undefined") {
+      try {
+        const saved = localStorage.getItem("tbc_live_sermon_notes");
+        if (saved && saved.trim()) return saved;
+      } catch {}
+    }
+    return "";
+  });
+  const [isAutoGenerating, setIsAutoGenerating] = useState(false);
+  const [isAutoCapturing, setIsAutoCapturing] = useState(false);
+  const [lastAutoCapturedTime, setLastAutoCapturedTime] = useState<string | null>(null);
+  const [copiedNotes, setCopiedNotes] = useState(false);
+  const [downloadFormatLoading, setDownloadFormatLoading] = useState<"word" | "pdf" | null>(null);
+
+  // Sync notes to local storage
+  useEffect(() => {
+    try {
+      if (notes) {
+        localStorage.setItem("tbc_live_sermon_notes", notes);
+      }
+    } catch {}
+  }, [notes]);
+
+  // Periodic Live Auto-Capture while livestreaming
+  useEffect(() => {
+    if (!isAutoCapturing) return;
+
+    // Capture incremental updates every 25 seconds
+    const timer = setInterval(async () => {
+      try {
+        const res = await fetch("/api/sermons/auto-notes", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            title: initialTitle,
+            description: initialDescription,
+            speaker: "Pastor Victor Owoeye",
+            existingNotes: notes,
+            mode: "incremental",
+          }),
+        });
+        if (res.ok) {
+          const data = await res.json();
+          if (data.notes) {
+            setNotes((prev) => (prev ? `${prev}\n\n${data.notes}` : data.notes));
+            setLastAutoCapturedTime(
+              new Date().toLocaleTimeString([], { hour: "numeric", minute: "2-digit" })
+            );
+          }
+        }
+      } catch (err) {
+        console.error("Auto capture tick error:", err);
+      }
+    }, 25000);
+
+    return () => clearInterval(timer);
+  }, [isAutoCapturing, initialTitle, initialDescription, notes]);
+
+  // 1-Click Generate Full Live Sermon Notes
+  const handleAutoGenerateNotes = async () => {
+    setIsAutoGenerating(true);
+    try {
+      const res = await fetch("/api/sermons/auto-notes", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          title: initialTitle,
+          description: initialDescription,
+          speaker: "Pastor Victor Owoeye",
+          existingNotes: notes,
+          mode: "full",
+        }),
+      });
+      if (res.ok) {
+        const data = await res.json();
+        if (data.notes) {
+          setNotes(data.notes);
+          setActiveTab("notes");
+        }
+      }
+    } catch (err) {
+      console.error("Auto-generate notes error:", err);
+    } finally {
+      setIsAutoGenerating(false);
+    }
+  };
+
+  // Download sermon message in Microsoft Word (.docx) format
+  const handleDownloadWord = async () => {
+    setDownloadFormatLoading("word");
+    try {
+      const contentToExport = notes.trim() || `THE BROOK CHURCH - SERMON NOTES\nTitle: ${initialTitle}\nDate: ${new Date().toDateString()}\n\nLive Sanctuary Broadcast Sermon Notes.`;
+      await exportToWordDocx({
+        title: initialTitle,
+        preacher: "Pastor Victor Owoeye",
+        content: contentToExport,
+        date: new Date().toLocaleDateString("en-US", {
+          weekday: "long",
+          year: "numeric",
+          month: "long",
+          day: "numeric",
+        }),
+      });
+    } catch (err) {
+      console.error("Word export failed:", err);
+    } finally {
+      setDownloadFormatLoading(null);
+    }
+  };
+
+  // Download sermon message in PDF (.pdf) format
+  const handleDownloadPdf = async () => {
+    setDownloadFormatLoading("pdf");
+    try {
+      const contentToExport = notes.trim() || `THE BROOK CHURCH - SERMON NOTES\nTitle: ${initialTitle}\nDate: ${new Date().toDateString()}\n\nLive Sanctuary Broadcast Sermon Notes.`;
+      await exportToPdf({
+        title: initialTitle,
+        preacher: "Pastor Victor Owoeye",
+        content: contentToExport,
+        date: new Date().toLocaleDateString("en-US", {
+          weekday: "long",
+          year: "numeric",
+          month: "long",
+          day: "numeric",
+        }),
+      });
+    } catch (err) {
+      console.error("PDF export failed:", err);
+    } finally {
+      setDownloadFormatLoading(null);
+    }
+  };
+
+  const handlePrint = () => {
+    const contentToExport = notes.trim() || `THE BROOK CHURCH - SERMON NOTES\nTitle: ${initialTitle}\nDate: ${new Date().toDateString()}`;
+    printSermonNotes({
+      title: initialTitle,
+      preacher: "Pastor Victor Owoeye",
+      content: contentToExport,
+    });
+  };
+
+  const handleCopyNotes = async () => {
+    if (!notes) return;
+    try {
+      await navigator.clipboard.writeText(notes);
+      setCopiedNotes(true);
+      setTimeout(() => setCopiedNotes(false), 2000);
+    } catch {}
+  };
+
+  const insertSnippet = (snippet: string) => {
+    setNotes((prev) => (prev ? `${prev}\n${snippet}` : snippet));
+  };
 
   // Reactions state
   const [reactions, setReactions] = useState<FloatingReaction[]>([]);
@@ -743,6 +908,20 @@ export function LiveStreamPlayer({
                 </a>
               )}
 
+              <button
+                type="button"
+                onClick={() => {
+                  setActiveTab("notes");
+                  if (!notes || notes.trim().length === 0) {
+                    handleAutoGenerateNotes();
+                  }
+                }}
+                className="flex items-center gap-1.5 rounded-full bg-gradient-to-r from-amber-500 to-amber-600 px-3.5 py-2 text-xs font-bold text-white shadow-xs hover:from-amber-600 hover:to-amber-700 transition"
+              >
+                <Sparkles className="h-3.5 w-3.5" />
+                <span>Auto-Make Notes</span>
+              </button>
+
               <Link
                 href="/give"
                 className="rounded-full bg-emerald-600 px-4 py-2 text-xs font-bold text-white shadow-xs hover:bg-emerald-700 transition"
@@ -796,7 +975,7 @@ export function LiveStreamPlayer({
 
       {/* Right Column: Live Chat & Sermon Notepad */}
       <div className="lg:col-span-4 flex flex-col gap-4">
-        <div className="flex h-[600px] flex-col rounded-3xl border border-border bg-paper shadow-md overflow-hidden">
+        <div className="flex h-[660px] flex-col rounded-3xl border border-border bg-paper shadow-md overflow-hidden">
           {/* Header Tabs */}
           <div className="flex items-center justify-between border-b border-border bg-surface-tint p-3">
             <div className="flex items-center gap-2">
@@ -813,14 +992,20 @@ export function LiveStreamPlayer({
               </button>
               <button
                 onClick={() => setActiveTab("notes")}
-                className={`flex items-center gap-1.5 rounded-xl px-3 py-1.5 text-xs font-bold transition ${
+                className={`flex items-center gap-1.5 rounded-xl px-3 py-1.5 text-xs font-bold transition relative ${
                   activeTab === "notes"
                     ? "bg-paper text-accent shadow-xs"
                     : "text-ink-muted hover:text-ink"
                 }`}
               >
                 <FileText className="h-3.5 w-3.5" />
-                Sermon Notes
+                <span>Sermon Notes</span>
+                {isAutoCapturing && (
+                  <span className="h-2 w-2 rounded-full bg-red-500 animate-pulse" title="Live Auto-Capture Active" />
+                )}
+                {notes && notes.length > 20 && !isAutoCapturing && (
+                  <span className="h-1.5 w-1.5 rounded-full bg-emerald-500" />
+                )}
               </button>
             </div>
             <span className="text-[11px] font-mono text-ink-muted">{viewerCount} online</span>
@@ -879,34 +1064,190 @@ export function LiveStreamPlayer({
             </div>
           )}
 
-          {/* Tab 2: Sermon Notes Notepad */}
+          {/* Tab 2: Intelligent Live Sermon Notes Studio */}
           {activeTab === "notes" && (
-            <div className="flex flex-1 flex-col p-4">
-              <p className="text-xs text-ink-muted mb-2">
-                Type scripture references, key points and revelations from today&apos;s sermon.
-              </p>
-              <textarea
-                value={notes}
-                onChange={(e) => setNotes(e.target.value)}
-                placeholder="• Sermon Topic:&#10;• Scriptures:&#10;• Key Revelation:&#10;• Action Points:"
-                className="flex-1 w-full rounded-2xl border border-border bg-surface-tint p-3 text-xs leading-relaxed text-ink outline-none transition focus:border-accent resize-none font-mono"
-              />
-              <div className="mt-3 flex justify-between items-center">
-                <span className="text-[10px] text-ink-muted">Saved locally in browser</span>
+            <div className="flex flex-1 flex-col overflow-hidden p-3 gap-2.5">
+              {/* Automated Note-Making Controls Bar */}
+              <div className="flex flex-wrap items-center justify-between gap-1.5 rounded-2xl bg-surface-tint p-2 border border-border">
+                <div className="flex items-center gap-1.5 flex-wrap">
+                  <button
+                    type="button"
+                    onClick={handleAutoGenerateNotes}
+                    disabled={isAutoGenerating}
+                    title="Automatically create complete sermon study notes for current live broadcast"
+                    className="flex items-center gap-1 rounded-xl bg-gradient-to-r from-accent to-accent-dark px-2.5 py-1 text-[11px] font-bold text-white shadow-xs hover:brightness-110 transition disabled:opacity-50"
+                  >
+                    {isAutoGenerating ? (
+                      <Loader2 className="h-3 w-3 animate-spin" />
+                    ) : (
+                      <Sparkles className="h-3 w-3 text-amber-300" />
+                    )}
+                    <span>{isAutoGenerating ? "Making Notes..." : "Auto-Make Notes"}</span>
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={() => setIsAutoCapturing(!isAutoCapturing)}
+                    title="Automatically captures live key points and declarations as livestream plays"
+                    className={`flex items-center gap-1.5 rounded-xl px-2.5 py-1 text-[11px] font-bold transition border ${
+                      isAutoCapturing
+                        ? "bg-red-500 text-white border-red-600 shadow-xs"
+                        : "bg-paper text-ink border-border hover:bg-surface-tint"
+                    }`}
+                  >
+                    <Radio className={`h-3 w-3 ${isAutoCapturing ? "animate-pulse" : ""}`} />
+                    <span>{isAutoCapturing ? "Live Auto-Capture ON" : "Auto-Capture"}</span>
+                  </button>
+                </div>
+
+                <div className="flex items-center gap-1">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      if (confirm("Reset current sermon notes?")) {
+                        setNotes("");
+                        localStorage.removeItem("tbc_live_sermon_notes");
+                      }
+                    }}
+                    title="Clear current notes"
+                    className="rounded-lg p-1 text-ink-muted hover:text-red-500 transition"
+                  >
+                    <RotateCcw className="h-3.5 w-3.5" />
+                  </button>
+                </div>
+              </div>
+
+              {/* Quick Snippet Chips */}
+              <div className="flex items-center gap-1 overflow-x-auto pb-0.5 text-[10px]">
+                <span className="text-ink-muted shrink-0">Quick Add:</span>
                 <button
                   type="button"
-                  onClick={() => {
-                    const blob = new Blob([notes], { type: "text/plain" });
-                    const url = URL.createObjectURL(blob);
-                    const a = document.createElement("a");
-                    a.href = url;
-                    a.download = `TBC-Sermon-Notes-${new Date().toISOString().slice(0, 10)}.txt`;
-                    a.click();
-                  }}
-                  className="rounded-full bg-accent px-4 py-1.5 text-xs font-semibold text-white hover:bg-accent-dark transition"
+                  onClick={() => insertSnippet("• Scripture: ")}
+                  className="rounded-lg border border-border bg-paper px-2 py-0.5 font-medium text-ink hover:bg-surface-tint shrink-0 transition"
                 >
-                  Download Notes
+                  + Scripture
                 </button>
+                <button
+                  type="button"
+                  onClick={() => insertSnippet("• Key Revelation: ")}
+                  className="rounded-lg border border-border bg-paper px-2 py-0.5 font-medium text-ink hover:bg-surface-tint shrink-0 transition"
+                >
+                  + Revelation
+                </button>
+                <button
+                  type="button"
+                  onClick={() => insertSnippet("• Prophetic Word: ")}
+                  className="rounded-lg border border-border bg-paper px-2 py-0.5 font-medium text-ink hover:bg-surface-tint shrink-0 transition"
+                >
+                  + Prophetic Word
+                </button>
+                <button
+                  type="button"
+                  onClick={() => insertSnippet("• Action Point: ")}
+                  className="rounded-lg border border-border bg-paper px-2 py-0.5 font-medium text-ink hover:bg-surface-tint shrink-0 transition"
+                >
+                  + Action Point
+                </button>
+              </div>
+
+              {/* Main Notes Textarea */}
+              <div className="relative flex-1 min-h-0">
+                <textarea
+                  value={notes}
+                  onChange={(e) => setNotes(e.target.value)}
+                  placeholder={`• Sermon Topic: ${initialTitle}\n• Scriptures: John 10:10, Romans 8:11, 2 Peter 1:3\n• Key Revelation:\n• Pastoral Quotes:\n• Prophetic Decrees:\n• Action Points:`}
+                  className="h-full w-full rounded-2xl border border-border bg-surface-tint p-3 text-xs leading-relaxed text-ink outline-none transition focus:border-accent resize-none font-mono text-[11px]"
+                />
+                {!notes && (
+                  <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none p-4 text-center">
+                    <p className="text-xs text-ink-muted mb-2 font-sans font-medium">
+                      No notes written yet for this live stream.
+                    </p>
+                    <button
+                      type="button"
+                      onClick={handleAutoGenerateNotes}
+                      className="pointer-events-auto rounded-full bg-accent px-3 py-1.5 text-xs font-bold text-white shadow-md hover:bg-accent-dark transition flex items-center gap-1.5"
+                    >
+                      <Sparkles className="h-3 w-3" />
+                      <span>Auto-Generate Sermon Notes Now</span>
+                    </button>
+                  </div>
+                )}
+              </div>
+
+              {/* Status info bar */}
+              <div className="flex items-center justify-between text-[10px] text-ink-muted px-1">
+                <span>
+                  {notes.trim() ? `${notes.trim().split(/\s+/).filter(Boolean).length} words` : "Empty"} &bull; Saved locally
+                </span>
+                {isAutoCapturing && (
+                  <span className="text-red-500 font-semibold animate-pulse">
+                    Live capture active {lastAutoCapturedTime ? `(${lastAutoCapturedTime})` : ""}
+                  </span>
+                )}
+              </div>
+
+              {/* Export in MS Word & PDF Toolbar */}
+              <div className="pt-2 border-t border-border flex flex-wrap items-center justify-between gap-2">
+                <div className="flex items-center gap-1.5 flex-wrap">
+                  {/* MS Word Download */}
+                  <button
+                    type="button"
+                    onClick={handleDownloadWord}
+                    disabled={downloadFormatLoading === "word"}
+                    title="Download written sermon message in Microsoft Word (.docx) format"
+                    className="flex items-center gap-1 rounded-xl bg-blue-700 hover:bg-blue-800 text-white px-3 py-1.5 text-xs font-bold shadow-xs transition active:scale-95 disabled:opacity-50"
+                  >
+                    {downloadFormatLoading === "word" ? (
+                      <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                    ) : (
+                      <Download className="h-3.5 w-3.5" />
+                    )}
+                    <span>Word (.docx)</span>
+                  </button>
+
+                  {/* PDF Download */}
+                  <button
+                    type="button"
+                    onClick={handleDownloadPdf}
+                    disabled={downloadFormatLoading === "pdf"}
+                    title="Download written sermon message in PDF (.pdf) format"
+                    className="flex items-center gap-1 rounded-xl bg-red-600 hover:bg-red-700 text-white px-3 py-1.5 text-xs font-bold shadow-xs transition active:scale-95 disabled:opacity-50"
+                  >
+                    {downloadFormatLoading === "pdf" ? (
+                      <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                    ) : (
+                      <Download className="h-3.5 w-3.5" />
+                    )}
+                    <span>PDF (.pdf)</span>
+                  </button>
+                </div>
+
+                <div className="flex items-center gap-1">
+                  <button
+                    type="button"
+                    onClick={handlePrint}
+                    title="Print sermon notes"
+                    className="flex items-center gap-1 rounded-xl border border-border bg-paper px-2.5 py-1.5 text-xs font-medium text-ink hover:bg-surface-tint transition"
+                  >
+                    <Printer className="h-3 w-3" />
+                    <span className="hidden sm:inline">Print</span>
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={handleCopyNotes}
+                    title="Copy full notes text to clipboard"
+                    className="flex items-center gap-1 rounded-xl border border-border bg-paper px-2.5 py-1.5 text-xs font-medium text-ink hover:bg-surface-tint transition"
+                  >
+                    {copiedNotes ? (
+                      <Check className="h-3 w-3 text-emerald-500" />
+                    ) : (
+                      <Copy className="h-3 w-3" />
+                    )}
+                    <span>{copiedNotes ? "Copied" : "Copy"}</span>
+                  </button>
+                </div>
               </div>
             </div>
           )}

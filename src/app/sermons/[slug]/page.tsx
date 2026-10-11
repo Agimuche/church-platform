@@ -8,6 +8,7 @@ import { LinkButton } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { MediaCard } from "@/components/ui/media-card";
 import { formatCurrency, formatDate, formatDuration } from "@/lib/utils";
+import { SermonNotesDownloadCard } from "@/components/sermons/sermon-notes-download-card";
 
 interface SermonDetailPageProps {
   params: Promise<{ slug: string }>;
@@ -93,7 +94,14 @@ export default async function SermonDetailPage({ params }: SermonDetailPageProps
           </div>
         </div>
 
-        <aside>
+        <aside className="space-y-6">
+          <SermonNotesDownloadCard
+            title={sermon.title}
+            speaker={sermon.speaker?.name ?? "The Brook Church"}
+            description={sermon.description ?? undefined}
+            date={sermon.publishedAt ? formatDate(sermon.publishedAt) : undefined}
+          />
+
           {sermon.speaker && (
             <div className="rounded-xl border border-border bg-paper p-5">
               <p className="text-xs font-medium uppercase tracking-wide text-ink-muted">Speaker</p>
