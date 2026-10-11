@@ -10,7 +10,15 @@ export default async function AdminLiveStreamsPage() {
   const streams = await prisma.liveStream.findMany({
     orderBy: { scheduledStart: "desc" },
     take: 50,
-    select: { id: true, title: true, status: true, scheduledStart: true },
+    select: {
+      id: true,
+      title: true,
+      description: true,
+      status: true,
+      scheduledStart: true,
+      provider: true,
+      playbackUrl: true,
+    },
   });
 
   return (

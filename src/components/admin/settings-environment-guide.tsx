@@ -83,7 +83,7 @@ export function SettingsEnvironmentGuide({ currentEnv }: SettingsEnvProps) {
       category: "Live Streaming Engine",
       icon: Radio,
       required: false,
-      description: "Controls the live streaming provider. The app natively supports Direct Cloud HLS/WebRTC streaming, browser Studio Cam, and YouTube embeds with zero external paid APIs required.",
+      description: "Controls the live streaming provider. The app natively supports Direct Facebook Live extraction, YouTube Live extraction, Cloud HLS/WebRTC streaming, and browser Studio Cam with zero external paid APIs required.",
       howToGet: "Set to 'mock' for built-in native streaming, or integrate Mux/Livepeer if desired.",
       example: 'STREAMING_PROVIDER="mock"',
     },

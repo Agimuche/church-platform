@@ -28,13 +28,24 @@ export async function POST(req: Request) {
       description: parsed.data.description,
     });
 
+    let streamProvider = parsed.data.provider || provider.name;
+    const playbackUrl = parsed.data.playbackUrl?.trim();
+    if (playbackUrl && (!parsed.data.provider || parsed.data.provider === "mock")) {
+      if (playbackUrl.includes("facebook.com") || playbackUrl.includes("fb.watch")) {
+        streamProvider = "facebook";
+      } else if (playbackUrl.includes("youtube.com") || playbackUrl.includes("youtu.be")) {
+        streamProvider = "youtube";
+      }
+    }
+
     const stream = await prisma.liveStream.create({
       data: {
         title: parsed.data.title,
         description: parsed.data.description,
         scheduledStart: new Date(parsed.data.scheduledStart),
         status: "SCHEDULED",
-        provider: provider.name,
+        provider: streamProvider,
+        playbackUrl: playbackUrl || undefined,
         providerStreamId: handle.providerStreamId,
         createdById: session.user.id,
       },

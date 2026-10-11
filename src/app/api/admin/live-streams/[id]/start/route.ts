@@ -14,7 +14,7 @@ export async function POST(req: Request, { params }: { params: Promise<{ id: str
 
     const provider = getStreamingProvider();
     await provider.startStream(stream.providerStreamId);
-    const playbackUrl = await provider.getPlaybackUrl(stream.providerStreamId);
+    const playbackUrl = stream.playbackUrl || (await provider.getPlaybackUrl(stream.providerStreamId));
 
     const updated = await prisma.liveStream.update({
       where: { id },

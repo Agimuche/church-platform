@@ -3,6 +3,7 @@
 import { useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
+import { extractFacebookStream } from "@/lib/utils/stream-extractor";
 
 export type PlatformType = "all" | "youtube" | "facebook" | "instagram";
 
@@ -198,7 +199,30 @@ export const FEATURED_MESSAGES_DATA: FeaturedMessage[] = [
 
 export function FeaturedMessagesSection() {
   const [activePlatform, setActivePlatform] = useState<PlatformType>("all");
-  const [modalVideoId, setModalVideoId] = useState<string | null>(null);
+  const [modalStream, setModalStream] = useState<{
+    embedUrl: string;
+    title: string;
+    platform: "youtube" | "facebook";
+  } | null>(null);
+
+  const openPlayer = (msg: FeaturedMessage) => {
+    if (msg.youtubeId) {
+      setModalStream({
+        embedUrl: `https://www.youtube.com/embed/${msg.youtubeId}?autoplay=1&rel=0&modestbranding=1`,
+        title: msg.title,
+        platform: "youtube",
+      });
+    } else if (msg.platform === "facebook") {
+      const fb = extractFacebookStream(msg.url);
+      setModalStream({
+        embedUrl: fb.embedUrl,
+        title: msg.title,
+        platform: "facebook",
+      });
+    } else {
+      window.open(msg.url, "_blank", "noopener,noreferrer");
+    }
+  };
 
   const filteredMessages =
     activePlatform === "all"
@@ -391,13 +415,7 @@ export function FeaturedMessagesSection() {
                 {/* Center Play Button Overlay */}
                 <button
                   type="button"
-                  onClick={() => {
-                    if (heroMessage.youtubeId) {
-                      setModalVideoId(heroMessage.youtubeId);
-                    } else {
-                      window.open(heroMessage.url, "_blank", "noopener,noreferrer");
-                    }
-                  }}
+                  onClick={() => openPlayer(heroMessage)}
                   className="absolute inset-0 flex items-center justify-center bg-black/30 opacity-90 transition-opacity hover:opacity-100 hover:bg-black/40 group"
                   aria-label={`Play ${heroMessage.title}`}
                 >
@@ -448,12 +466,16 @@ export function FeaturedMessagesSection() {
                   </div>
                 </div>
 
-                <div className="mt-6 flex flex-wrap items-center gap-3 pt-4 border-t border-slate-100">
-                  {heroMessage.youtubeId ? (
+                <div className="mt-6 flex flex-wrap items-center gap-3 pt-4 border-slate-100">
+                  {heroMessage.youtubeId || heroMessage.platform === "facebook" ? (
                     <button
                       type="button"
-                      onClick={() => setModalVideoId(heroMessage.youtubeId!)}
-                      className="inline-flex items-center gap-2 rounded-full bg-red-600 px-5 py-2 text-xs font-bold text-white shadow-xs transition hover:bg-red-700"
+                      onClick={() => openPlayer(heroMessage)}
+                      className={`inline-flex items-center gap-2 rounded-full px-5 py-2 text-xs font-bold text-white shadow-xs transition ${
+                        heroMessage.platform === "facebook"
+                          ? "bg-blue-600 hover:bg-blue-700"
+                          : "bg-red-600 hover:bg-red-700"
+                      }`}
                     >
                       <svg className="w-3.5 h-3.5 fill-current" viewBox="0 0 24 24">
                         <path d="M8 5v14l11-7z" />
@@ -521,13 +543,7 @@ export function FeaturedMessagesSection() {
                   {/* Play Action Trigger */}
                   <button
                     type="button"
-                    onClick={() => {
-                      if (msg.youtubeId) {
-                        setModalVideoId(msg.youtubeId);
-                      } else {
-                        window.open(msg.url, "_blank", "noopener,noreferrer");
-                      }
-                    }}
+                    onClick={() => openPlayer(msg)}
                     className="absolute inset-0 flex items-center justify-center bg-black/20 opacity-0 transition-opacity group-hover:opacity-100"
                     aria-label={`Play ${msg.title}`}
                   >
@@ -579,13 +595,13 @@ export function FeaturedMessagesSection() {
         </div>
       </div>
 
-      {/* Video Modal Player (if YouTube video selected) */}
-      {modalVideoId && (
+      {/* Video Modal Player (Supporting both YouTube and Facebook Live/Videos) */}
+      {modalStream && (
         <div
           role="dialog"
           aria-modal="true"
           className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 p-4 backdrop-blur-sm"
-          onClick={() => setModalVideoId(null)}
+          onClick={() => setModalStream(null)}
         >
           <div
             className="relative w-full max-w-4xl overflow-hidden rounded-2xl bg-black shadow-2xl"
@@ -593,23 +609,23 @@ export function FeaturedMessagesSection() {
           >
             <div className="flex items-center justify-between bg-slate-900 px-4 py-3 text-white">
               <span className="text-xs font-semibold uppercase tracking-wider text-slate-300">
-                The Brook Church &bull; Video Player
+                The Brook Church &bull; {modalStream.platform === "facebook" ? "Facebook Live Player" : "YouTube Player"}
               </span>
               <button
                 type="button"
-                onClick={() => setModalVideoId(null)}
+                onClick={() => setModalStream(null)}
                 className="rounded-full bg-white/10 px-3 py-1 text-xs font-bold text-white hover:bg-white/20 transition"
               >
                 ✕ Close
               </button>
             </div>
-            <div className="aspect-video w-full">
+            <div className="aspect-video w-full bg-black">
               <iframe
-                src={`https://www.youtube.com/embed/${modalVideoId}?autoplay=1&rel=0&modestbranding=1`}
-                title="The Brook Church Sermon Player"
+                src={modalStream.embedUrl}
+                title={modalStream.title}
                 allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
                 allowFullScreen
-                className="h-full w-full"
+                className="h-full w-full border-0"
               />
             </div>
           </div>

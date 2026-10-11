@@ -1,67 +1,137 @@
-import { getCurrentLiveStream, listUpcomingStreams, listStreamHistory } from "@/lib/data/streams";
-import { Badge } from "@/components/ui/badge";
-import { formatDate } from "@/lib/utils";
+import { getCurrentLiveStream } from "@/lib/data/streams";
 import { LiveStreamPlayer } from "@/components/live/live-stream-player";
 import Link from "next/link";
+import { ExternalLink } from "lucide-react";
 
 export const dynamic = "force-dynamic";
 
 export const metadata = {
   title: "Live Broadcast | The Brook Church",
   description:
-    "Join The Brook Church live broadcast online. Watch Phronesis, Doxa, Accelerate, and Wordshop services streaming live from Calabar.",
+    "Join The Brook Church live broadcast online. Watch Phronesis, Doxa, Accelerate, and Wordshop services streaming live from Calabar on Facebook Live & YouTube.",
 };
 
-const TBC_FACEBOOK_URL = "https://web.facebook.com/thebrookchurchng/";
+const TBC_FACEBOOK_URL = "https://web.facebook.com/thebrookchurchng/live_videos/";
 const TBC_YOUTUBE_URL = "https://www.youtube.com/@thebrookchurchng";
 
 export default async function LivePage() {
-  const [current, upcoming, history] = await Promise.all([
-    getCurrentLiveStream(),
-    listUpcomingStreams(),
-    listStreamHistory(6),
-  ]);
+  const current = await getCurrentLiveStream();
 
   return (
     <div className="bg-background py-8 sm:py-12 transition-colors">
       <div className="container-app">
-        {/* Standalone Native Live Stream Player Engine */}
+        {/* Dual Live Stream Announcement Banner */}
+        <div className="mb-6 rounded-2xl border border-border bg-paper p-4 shadow-xs flex flex-col sm:flex-row items-center justify-between gap-3">
+          <div className="flex items-center gap-3">
+            <span className="flex h-3 w-3 rounded-full bg-red-600 animate-pulse" />
+            <div>
+              <p className="text-xs font-bold uppercase tracking-wider text-ink">
+                Simultaneous Sanctuary Transmission
+              </p>
+              <p className="text-xs text-ink-muted">
+                Extracted &amp; streamed live on both <strong className="text-blue-600">Facebook Live</strong> and <strong className="text-red-600">YouTube Live</strong> from Calabar.
+              </p>
+            </div>
+          </div>
+          <div className="flex items-center gap-2">
+            <a
+              href={TBC_FACEBOOK_URL}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-flex items-center gap-1.5 rounded-full bg-blue-600 px-3.5 py-1.5 text-xs font-bold text-white hover:bg-blue-700 transition"
+            >
+              <span>📘 Facebook Live</span>
+              <ExternalLink className="h-3 w-3" />
+            </a>
+            <a
+              href={TBC_YOUTUBE_URL}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-flex items-center gap-1.5 rounded-full bg-red-600 px-3.5 py-1.5 text-xs font-bold text-white hover:bg-red-700 transition"
+            >
+              <span>🔴 YouTube Live</span>
+              <ExternalLink className="h-3 w-3" />
+            </a>
+          </div>
+        </div>
+
+        {/* Standalone Multi-Platform Live Stream Player Engine */}
         <div className="mb-10">
           <LiveStreamPlayer
             initialTitle={current?.title ?? "Sunday Phronesis & Doxa Service"}
-            initialDescription={current?.description ?? "The Way of the Spirit — Live worship, word, and revelation from The Brook Church Sanctuary, Calabar."}
+            initialDescription={
+              current?.description ??
+              "The Way of the Spirit — Live worship, word, and revelation from The Brook Church Sanctuary, Calabar."
+            }
             initialStatus={current ? "LIVE" : "LIVE"}
             customStreamUrl={current?.playbackUrl ?? undefined}
+            provider={current?.provider ?? undefined}
           />
         </div>
 
-        {/* Latest YouTube Videos while offline or to catch up */}
+        {/* Facebook & YouTube Live Stream Archives / Catch Up */}
         <section className="mt-14">
           <div className="mb-6 flex flex-wrap items-center justify-between gap-4">
             <div>
               <span className="text-xs font-bold uppercase tracking-wider text-accent">Catch Up</span>
               <h2 className="mt-1 font-serif text-2xl font-bold text-ink">Recent Service Broadcasts</h2>
             </div>
-            <a
-              href={TBC_YOUTUBE_URL}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="text-xs font-bold text-red-500 hover:underline flex items-center gap-1.5"
-            >
-              <span>Watch on YouTube Channel</span>
-              <span>↗</span>
-            </a>
+            <div className="flex items-center gap-3">
+              <a
+                href={TBC_FACEBOOK_URL}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-xs font-bold text-blue-600 hover:underline flex items-center gap-1"
+              >
+                <span>Facebook Videos</span>
+                <span>↗</span>
+              </a>
+              <span className="text-slate-300">&bull;</span>
+              <a
+                href={TBC_YOUTUBE_URL}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-xs font-bold text-red-600 hover:underline flex items-center gap-1"
+              >
+                <span>YouTube Channel</span>
+                <span>↗</span>
+              </a>
+            </div>
           </div>
 
           <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
             {[
-              { id: "Ya3yIiRPqT0", title: "DOXA — Sunday 2nd Service", date: "Sep 27, 2026" },
-              { id: "noxVVQgfU9E", title: "WORDSHOP — Bible Study", date: "Sep 24, 2026" },
-              { id: "5HO7Ypny9m8", title: "WORDSHOP — Mid-week Bible Study", date: "Sep 17, 2026" },
+              {
+                id: "fb-zoe-live",
+                title: "The Zoe Dimension — Sunday Global Live",
+                platform: "facebook",
+                date: "Sep 27, 2026",
+                url: "https://web.facebook.com/thebrookchurchng/live_videos/",
+                thumb: "https://images.unsplash.com/photo-1519491050282-cf00c82424b4?auto=format&fit=crop&w=1200&q=80",
+                badge: "Facebook Live",
+              },
+              {
+                id: "Ya3yIiRPqT0",
+                title: "DOXA — Sunday 2nd Service",
+                platform: "youtube",
+                date: "Sep 27, 2026",
+                url: "https://www.youtube.com/watch?v=Ya3yIiRPqT0",
+                thumb: "https://img.youtube.com/vi/Ya3yIiRPqT0/hqdefault.jpg",
+                badge: "YouTube Service",
+              },
+              {
+                id: "noxVVQgfU9E",
+                title: "WORDSHOP — Pneumatology Bible Study",
+                platform: "youtube",
+                date: "Sep 24, 2026",
+                url: "https://www.youtube.com/watch?v=noxVVQgfU9E",
+                thumb: "https://img.youtube.com/vi/noxVVQgfU9E/hqdefault.jpg",
+                badge: "YouTube Study",
+              },
             ].map((video) => (
               <a
                 key={video.id}
-                href={`https://www.youtube.com/watch?v=${video.id}`}
+                href={video.url}
                 target="_blank"
                 rel="noopener noreferrer"
                 className="group relative overflow-hidden rounded-2xl border border-border bg-paper shadow-xs tbc-card-hover"
@@ -69,20 +139,35 @@ export default async function LivePage() {
                 <div className="relative aspect-video overflow-hidden bg-slate-900">
                   {/* eslint-disable-next-line @next/next/no-img-element */}
                   <img
-                    src={`https://img.youtube.com/vi/${video.id}/hqdefault.jpg`}
+                    src={video.thumb}
                     alt={video.title}
                     className="w-full h-full object-cover transition group-hover:scale-105"
                   />
+                  <div className="absolute top-3 left-3 z-10">
+                    <span
+                      className={`inline-flex items-center gap-1 rounded-full px-2.5 py-0.5 text-[10px] font-bold text-white shadow-md ${
+                        video.platform === "facebook" ? "bg-blue-600" : "bg-red-600"
+                      }`}
+                    >
+                      {video.badge}
+                    </span>
+                  </div>
                   <div className="absolute inset-0 flex items-center justify-center bg-black/20 group-hover:bg-black/40 transition">
-                    <div className="flex h-12 w-12 items-center justify-center rounded-full bg-red-600/90 text-white shadow-xl backdrop-blur-sm transition group-hover:scale-110">
+                    <div
+                      className={`flex h-12 w-12 items-center justify-center rounded-full text-white shadow-xl backdrop-blur-sm transition group-hover:scale-110 ${
+                        video.platform === "facebook" ? "bg-blue-600/90" : "bg-red-600/90"
+                      }`}
+                    >
                       <svg className="w-5 h-5 fill-current ml-0.5" viewBox="0 0 24 24">
-                        <path d="M8 5v14l11-7z"/>
+                        <path d="M8 5v14l11-7z" />
                       </svg>
                     </div>
                   </div>
                 </div>
                 <div className="p-4">
-                  <h3 className="font-bold text-ink text-sm line-clamp-1 group-hover:text-accent transition">{video.title}</h3>
+                  <h3 className="font-bold text-ink text-sm line-clamp-1 group-hover:text-accent transition">
+                    {video.title}
+                  </h3>
                   <p className="mt-1 text-xs text-ink-muted">{video.date}</p>
                 </div>
               </a>
@@ -107,7 +192,10 @@ export default async function LivePage() {
                 { name: "Tuesday Prayer — ACCELERATE", time: "6:00 AM", category: "Morning Prophetic" },
                 { name: "Wednesday Mid-week — WORDSHOP", time: "6:00 PM", category: "Bible Study" },
               ].map((service) => (
-                <div key={service.name} className="flex justify-between items-center rounded-2xl border border-border bg-surface-tint p-4">
+                <div
+                  key={service.name}
+                  className="flex justify-between items-center rounded-2xl border border-border bg-surface-tint p-4"
+                >
                   <div>
                     <p className="font-bold text-ink text-sm">{service.name}</p>
                     <p className="mt-0.5 text-xs text-ink-muted">{service.category} &bull; The Brook Church</p>
@@ -126,9 +214,11 @@ export default async function LivePage() {
               <span className="text-xs font-bold uppercase tracking-wider text-accent">
                 Media &amp; Doctrine
               </span>
-              <h2 className="mt-1 font-serif text-xl font-bold text-ink">Pneumatology &amp; Grace Archives</h2>
+              <h2 className="mt-1 font-serif text-xl font-bold text-ink">
+                Pneumatology &amp; Grace Archives
+              </h2>
               <p className="mt-3 text-sm text-ink-muted leading-relaxed">
-                Missed a live service? Our library archives every sermon on Pneumatology, the Zoe life, and healing of the mind taught by Pastor Ose Imiemohon and associate pastors.
+                Missed a live service? Our library archives every sermon on Pneumatology, the Zoe life, and healing of the mind taught by Pastor Ose Imiemohon and associate pastors on both Facebook and YouTube.
               </p>
             </div>
 

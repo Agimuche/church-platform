@@ -39,7 +39,7 @@ export async function SiteHeader() {
           </div>
           <div className="flex items-center gap-4">
             <a
-              href="https://web.facebook.com/thebrookchurchng/"
+              href="https://web.facebook.com/thebrookchurchng/live_videos/"
               target="_blank"
               rel="noopener noreferrer"
               className="text-slate-300 hover:text-white transition"

@@ -23,7 +23,7 @@ async function handleQuickAdmin(req: NextRequest) {
   const emailParam = searchParams.get("email") || "admin@thebrookchurch.org";
 
   // Look up or find the super admin
-  let user = await prisma.user.findFirst({
+  const user = await prisma.user.findFirst({
     where: {
       OR: [
         { email: emailParam },

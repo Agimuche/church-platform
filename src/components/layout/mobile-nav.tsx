@@ -185,12 +185,12 @@ export function MobileNav({
                 </a>
                 <span className="text-slate-300">&bull;</span>
                 <a
-                  href="https://web.facebook.com/thebrookchurchng/"
+                  href="https://web.facebook.com/thebrookchurchng/live_videos/"
                   target="_blank"
                   rel="noopener noreferrer"
                   className="text-blue-600 font-semibold hover:underline"
                 >
-                  Facebook
+                  Facebook Live
                 </a>
                 <span className="text-slate-300">&bull;</span>
                 <a

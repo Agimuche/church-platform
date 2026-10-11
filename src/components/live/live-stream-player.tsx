@@ -16,14 +16,24 @@ import {
   FileText,
   Share2,
   Check,
+  Sparkles,
+  ExternalLink,
 } from "lucide-react";
 import { motion, AnimatePresence } from "motion/react";
+import {
+  extractFacebookStream,
+  extractYouTubeStream,
+  extractStream,
+  TBC_DEFAULT_FACEBOOK_LIVE_URL,
+  TBC_DEFAULT_YOUTUBE_LIVE_URL,
+} from "@/lib/utils/stream-extractor";
 
 interface LiveStreamProps {
   initialTitle?: string;
   initialDescription?: string;
   initialStatus?: "LIVE" | "SCHEDULED" | "ENDED";
   customStreamUrl?: string;
+  provider?: string;
 }
 
 interface ChatMessage {
@@ -45,13 +55,54 @@ export function LiveStreamPlayer({
   initialDescription = "The Way of the Spirit — Live from The Brook Church Sanctuary, Calabar.",
   initialStatus = "LIVE",
   customStreamUrl,
+  provider,
 }: LiveStreamProps) {
-  const [streamSource, setStreamSource] = useState<"native" | "camera" | "youtube">("native");
+  // Determine initial stream mode based on provider or URL
+  const [streamSource, setStreamSource] = useState<
+    "facebook" | "youtube" | "native" | "camera"
+  >(() => {
+    if (
+      provider === "facebook" ||
+      (customStreamUrl && customStreamUrl.includes("facebook.com"))
+    ) {
+      return "facebook";
+    }
+    if (
+      provider === "youtube" ||
+      (customStreamUrl && customStreamUrl.includes("youtube.com"))
+    ) {
+      return "youtube";
+    }
+    // Default to Facebook Live as requested
+    return "facebook";
+  });
+
+  // Current URLs
+  const [facebookUrl, setFacebookUrl] = useState(() => {
+    if (customStreamUrl && customStreamUrl.includes("facebook.com")) {
+      return customStreamUrl;
+    }
+    return TBC_DEFAULT_FACEBOOK_LIVE_URL;
+  });
+
+  const [youtubeUrl, setYoutubeUrl] = useState(() => {
+    if (customStreamUrl && customStreamUrl.includes("youtube.com")) {
+      return customStreamUrl;
+    }
+    return TBC_DEFAULT_YOUTUBE_LIVE_URL;
+  });
+
+  // URL changer popover state
+  const [showUrlChanger, setShowUrlChanger] = useState(false);
+  const [urlInput, setUrlInput] = useState("");
+  const [extractError, setExtractError] = useState("");
+  const [extractSuccess, setExtractSuccess] = useState("");
+
   const [isPlaying, setIsPlaying] = useState(true);
   const [isMuted, setIsMuted] = useState(false);
   const [isFullscreen, setIsFullscreen] = useState(false);
   const [audioOnly, setAudioOnly] = useState(false);
-  const [viewerCount, setViewerCount] = useState(248);
+  const [viewerCount, setViewerCount] = useState(384);
   const [activeTab, setActiveTab] = useState<"chat" | "notes">("chat");
 
   // Camera Studio State
@@ -60,10 +111,33 @@ export function LiveStreamPlayer({
 
   // Chat State
   const [messages, setMessages] = useState<ChatMessage[]>([
-    { id: "1", name: "Pastor Victor Owoeye", message: "Welcome to today's glorious service! The Spirit of God is in this place.", time: "8:05 AM", isPastor: true },
-    { id: "2", name: "Sister Emem (Calabar)", message: "Hallelujah! Connected from Calabar. Ready to receive the Word.", time: "8:07 AM" },
-    { id: "3", name: "Brother Daniel (Lagos)", message: "Grace upon grace! Amen to the Word!", time: "8:12 AM" },
-    { id: "4", name: "Sister Grace (United Kingdom)", message: "Watching live from London. The Zoe life is at work!", time: "8:15 AM" },
+    {
+      id: "1",
+      name: "Pastor Victor Owoeye",
+      message:
+        "Welcome to today's glorious service! The Spirit of God is in this place.",
+      time: "8:05 AM",
+      isPastor: true,
+    },
+    {
+      id: "2",
+      name: "Sister Emem (Calabar)",
+      message:
+        "Hallelujah! Connected on Facebook Live. Ready to receive the Word.",
+      time: "8:07 AM",
+    },
+    {
+      id: "3",
+      name: "Brother Daniel (Lagos)",
+      message: "Grace upon grace! Amen to the Zoe life revelation!",
+      time: "8:12 AM",
+    },
+    {
+      id: "4",
+      name: "Sister Grace (United Kingdom)",
+      message: "Watching live from London. Streaming crystal clear!",
+      time: "8:15 AM",
+    },
   ]);
   const [inputName, setInputName] = useState("");
   const [inputMsg, setInputMsg] = useState("");
@@ -78,6 +152,10 @@ export function LiveStreamPlayer({
 
   const videoContainerRef = useRef<HTMLDivElement>(null);
   const videoRef = useRef<HTMLVideoElement>(null);
+
+  // Extracted stream representations
+  const extractedFb = extractFacebookStream(facebookUrl);
+  const extractedYt = extractYouTubeStream(youtubeUrl);
 
   // Start Camera Broadcast Studio
   const startCameraStudio = async () => {
@@ -95,7 +173,9 @@ export function LiveStreamPlayer({
         setIsPlaying(true);
       }
     } catch {
-      setCameraError("Camera access denied or unavailable. You can use native cloud stream or YouTube.");
+      setCameraError(
+        "Camera access denied or unavailable. You can use Facebook Live, YouTube, or direct stream."
+      );
     }
   };
 
@@ -161,20 +241,84 @@ export function LiveStreamPlayer({
     }
   };
 
+  // Handle instant custom URL extraction in the player
+  const handleApplyCustomUrl = (e: React.FormEvent) => {
+    e.preventDefault();
+    setExtractError("");
+    setExtractSuccess("");
+    const trimmed = urlInput.trim();
+    if (!trimmed) return;
+
+    const extracted = extractStream(trimmed);
+    if (!extracted.isValid && extracted.platform === "unknown") {
+      setExtractError("Unrecognized link. Please paste a Facebook or YouTube live URL.");
+      return;
+    }
+
+    if (extracted.platform === "facebook") {
+      setFacebookUrl(extracted.canonicalUrl);
+      setStreamSource("facebook");
+      setExtractSuccess("Facebook Live extracted and playing!");
+    } else if (extracted.platform === "youtube") {
+      setYoutubeUrl(extracted.canonicalUrl);
+      setStreamSource("youtube");
+      setExtractSuccess("YouTube Live extracted and playing!");
+    } else {
+      setStreamSource("native");
+      setExtractSuccess("Custom direct stream loaded!");
+    }
+
+    setUrlInput("");
+    setTimeout(() => setShowUrlChanger(false), 2000);
+  };
+
   return (
     <div className="grid gap-6 lg:grid-cols-12">
       {/* Left/Main Column: Stream Player & Broadcast Controls */}
       <div className="lg:col-span-8 flex flex-col gap-4">
-        {/* Stream Mode Selector Tabs */}
+        {/* Stream Mode Selector Tabs & Link Extractor Tool */}
         <div className="flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-border bg-paper p-3 shadow-xs">
           <div className="flex items-center gap-2">
             <span className="flex h-2.5 w-2.5 rounded-full bg-red-600 animate-pulse" />
             <span className="text-xs font-bold uppercase tracking-wider text-ink">
-              Broadcast Engine
+              Live Engine
             </span>
           </div>
 
           <div className="flex flex-wrap items-center gap-1.5 p-1 rounded-xl bg-surface-tint border border-border text-xs font-medium">
+            {/* Facebook Live (Primary) */}
+            <button
+              onClick={() => {
+                stopCameraStudio();
+                setStreamSource("facebook");
+              }}
+              className={`flex items-center gap-1.5 rounded-lg px-3 py-1.5 transition ${
+                streamSource === "facebook"
+                  ? "bg-blue-600 text-white shadow-xs font-semibold"
+                  : "text-ink-muted hover:text-ink"
+              }`}
+            >
+              <span>📘</span>
+              <span>Facebook Live</span>
+            </button>
+
+            {/* YouTube Live */}
+            <button
+              onClick={() => {
+                stopCameraStudio();
+                setStreamSource("youtube");
+              }}
+              className={`flex items-center gap-1.5 rounded-lg px-3 py-1.5 transition ${
+                streamSource === "youtube"
+                  ? "bg-red-600 text-white shadow-xs font-semibold"
+                  : "text-ink-muted hover:text-ink"
+              }`}
+            >
+              <span>🔴</span>
+              <span>YouTube Live</span>
+            </button>
+
+            {/* Native Cloud Stream */}
             <button
               onClick={() => {
                 stopCameraStudio();
@@ -186,8 +330,10 @@ export function LiveStreamPlayer({
                   : "text-ink-muted hover:text-ink"
               }`}
             >
-              Direct Cloud Stream
+              Direct Cloud Feed
             </button>
+
+            {/* Live Studio Cam */}
             <button
               onClick={() => {
                 if (!cameraActive) {
@@ -203,23 +349,58 @@ export function LiveStreamPlayer({
               }`}
             >
               <Video className="h-3.5 w-3.5" />
-              Live Studio Cam
-            </button>
-            <button
-              onClick={() => {
-                stopCameraStudio();
-                setStreamSource("youtube");
-              }}
-              className={`rounded-lg px-3 py-1.5 transition ${
-                streamSource === "youtube"
-                  ? "bg-red-600 text-white shadow-xs font-semibold"
-                  : "text-ink-muted hover:text-ink"
-              }`}
-            >
-              YouTube Live
+              Studio Cam
             </button>
           </div>
+
+          {/* Quick Change / Paste Link button */}
+          <button
+            type="button"
+            onClick={() => setShowUrlChanger(!showUrlChanger)}
+            className="text-xs font-semibold text-accent hover:underline flex items-center gap-1 ml-auto sm:ml-0"
+          >
+            <Sparkles className="h-3.5 w-3.5" />
+            <span>{showUrlChanger ? "Close Extractor" : "Paste Stream URL"}</span>
+          </button>
         </div>
+
+        {/* Dynamic URL Extractor Input Drawer */}
+        {showUrlChanger && (
+          <motion.div
+            initial={{ opacity: 0, height: 0 }}
+            animate={{ opacity: 1, height: "auto" }}
+            exit={{ opacity: 0, height: 0 }}
+            className="rounded-2xl border border-sky-200 dark:border-sky-900 bg-sky-50 dark:bg-sky-950/40 p-4 shadow-sm"
+          >
+            <div className="flex items-center justify-between mb-2">
+              <span className="text-xs font-bold text-ink">
+                Extract Live Stream from Facebook or YouTube URL:
+              </span>
+              <span className="text-[11px] text-ink-muted">Instant Extraction</span>
+            </div>
+            <form onSubmit={handleApplyCustomUrl} className="flex gap-2">
+              <input
+                type="text"
+                value={urlInput}
+                onChange={(e) => setUrlInput(e.target.value)}
+                placeholder="e.g. https://web.facebook.com/thebrookchurchng/live_videos/ or video ID"
+                className="flex-1 rounded-xl border border-border bg-paper px-3 py-2 text-xs text-ink outline-none transition focus:border-accent"
+              />
+              <button
+                type="submit"
+                className="rounded-xl bg-accent px-4 py-2 text-xs font-bold text-white hover:bg-accent-dark transition shrink-0"
+              >
+                Extract &amp; Play
+              </button>
+            </form>
+            {extractError && (
+              <p className="mt-2 text-xs text-red-600 font-medium">{extractError}</p>
+            )}
+            {extractSuccess && (
+              <p className="mt-2 text-xs text-emerald-600 font-medium">{extractSuccess}</p>
+            )}
+          </motion.div>
+        )}
 
         {/* Video Player Frame with 3D Border & Glow */}
         <div
@@ -245,7 +426,33 @@ export function LiveStreamPlayer({
             </AnimatePresence>
           </div>
 
-          {/* Player Display based on stream source */}
+          {/* 1. FACEBOOK LIVE EMBED (Extracted) */}
+          {streamSource === "facebook" && (
+            <div className="relative h-full w-full bg-slate-950">
+              <iframe
+                src={extractedFb.embedUrl}
+                title="The Brook Church — Facebook Live"
+                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+                allowFullScreen
+                className="h-full w-full border-0"
+              />
+            </div>
+          )}
+
+          {/* 2. YOUTUBE LIVE EMBED (Extracted) */}
+          {streamSource === "youtube" && (
+            <div className="relative h-full w-full bg-slate-950">
+              <iframe
+                src={extractedYt.embedUrl}
+                title="The Brook Church — YouTube Live"
+                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                allowFullScreen
+                className="h-full w-full border-0"
+              />
+            </div>
+          )}
+
+          {/* 3. NATIVE VIDEO PLAYER */}
           {streamSource === "native" && (
             <div className="relative h-full w-full flex items-center justify-center bg-radial from-slate-900 via-slate-950 to-black">
               {audioOnly ? (
@@ -276,12 +483,17 @@ export function LiveStreamPlayer({
                   loop
                   poster="https://i.ytimg.com/vi/Ya3yIiRPqT0/maxresdefault.jpg"
                   className="h-full w-full object-cover"
-                  src={customStreamUrl || "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4"}
+                  src={
+                    customStreamUrl && !customStreamUrl.includes("facebook.com") && !customStreamUrl.includes("youtube.com")
+                      ? customStreamUrl
+                      : "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4"
+                  }
                 />
               )}
             </div>
           )}
 
+          {/* 4. LIVE STUDIO CAM */}
           {streamSource === "camera" && (
             <div className="relative h-full w-full bg-black">
               <video
@@ -304,16 +516,6 @@ export function LiveStreamPlayer({
             </div>
           )}
 
-          {streamSource === "youtube" && (
-            <iframe
-              src="https://www.youtube.com/embed/live_stream?channel=UCJvBuTWCGPOYzucq8QhPYwQ&autoplay=1&rel=0&modestbranding=1"
-              title="The Brook Church — YouTube Live"
-              allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-              allowFullScreen
-              className="h-full w-full border-0"
-            />
-          )}
-
           {/* Watermark / Logo Overlay */}
           <div className="pointer-events-none absolute top-4 right-4 z-20 flex items-center gap-2 rounded-full bg-slate-950/60 px-3 py-1 text-[11px] font-semibold text-white/90 backdrop-blur-md border border-white/10">
             <span className="h-2 w-2 rounded-full bg-red-500 animate-pulse" />
@@ -323,7 +525,7 @@ export function LiveStreamPlayer({
           </div>
 
           {/* Interactive Player Controls Bar (For Native & Camera modes) */}
-          {streamSource !== "youtube" && (
+          {(streamSource === "native" || streamSource === "camera") && (
             <div className="absolute bottom-0 inset-x-0 z-20 bg-gradient-to-t from-black/90 via-black/50 to-transparent p-4 flex items-center justify-between text-white">
               <div className="flex items-center gap-3">
                 <button
@@ -391,13 +593,29 @@ export function LiveStreamPlayer({
         <div className="rounded-2xl border border-border bg-paper p-5 shadow-xs">
           <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
             <div>
-              <div className="flex items-center gap-2">
+              <div className="flex items-center gap-2 flex-wrap">
                 <span className="inline-flex items-center gap-1 rounded-full bg-red-100 dark:bg-red-950/60 border border-red-200 dark:border-red-900 px-2.5 py-0.5 text-xs font-bold text-red-600 dark:text-red-400">
                   <span className="h-1.5 w-1.5 rounded-full bg-red-600 animate-pulse" />
                   {initialStatus}
                 </span>
+
+                {streamSource === "facebook" ? (
+                  <span className="inline-flex items-center gap-1 rounded-full bg-blue-100 dark:bg-blue-950 px-2.5 py-0.5 text-xs font-bold text-blue-700 dark:text-blue-300">
+                    <span>📘</span> Extracted from Facebook Live
+                  </span>
+                ) : streamSource === "youtube" ? (
+                  <span className="inline-flex items-center gap-1 rounded-full bg-red-100 dark:bg-red-950 px-2.5 py-0.5 text-xs font-bold text-red-700 dark:text-red-300">
+                    <span>🔴</span> Extracted from YouTube Live
+                  </span>
+                ) : (
+                  <span className="inline-flex items-center gap-1 rounded-full bg-slate-100 dark:bg-slate-800 px-2.5 py-0.5 text-xs font-bold text-ink">
+                    <span>⚡</span> Direct Church Feed
+                  </span>
+                )}
+
                 <span className="text-xs text-ink-muted">The Brook Church Sanctuary &bull; Calabar</span>
               </div>
+
               <h1 className="mt-2 font-serif text-2xl font-bold text-ink sm:text-3xl">
                 {initialTitle}
               </h1>
@@ -407,6 +625,30 @@ export function LiveStreamPlayer({
             </div>
 
             <div className="flex flex-wrap items-center gap-2 shrink-0">
+              {streamSource === "facebook" && (
+                <a
+                  href={extractedFb.directWatchUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="rounded-full bg-blue-600 px-4 py-2 text-xs font-bold text-white shadow-xs hover:bg-blue-700 transition flex items-center gap-1.5"
+                >
+                  <ExternalLink className="h-3.5 w-3.5" />
+                  <span>Open on Facebook</span>
+                </a>
+              )}
+
+              {streamSource === "youtube" && (
+                <a
+                  href={extractedYt.directWatchUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="rounded-full bg-red-600 px-4 py-2 text-xs font-bold text-white shadow-xs hover:bg-red-700 transition flex items-center gap-1.5"
+                >
+                  <ExternalLink className="h-3.5 w-3.5" />
+                  <span>Open on YouTube</span>
+                </a>
+              )}
+
               <Link
                 href="/give"
                 className="rounded-full bg-emerald-600 px-4 py-2 text-xs font-bold text-white shadow-xs hover:bg-emerald-700 transition"
