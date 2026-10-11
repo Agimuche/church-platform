@@ -17,6 +17,7 @@ import {
   ExtractedStream,
   TBC_DEFAULT_FACEBOOK_LIVE_URL,
   TBC_DEFAULT_YOUTUBE_LIVE_URL,
+  TBC_DEFAULT_CURRENT_SERVICE_YOUTUBE_ID,
 } from "@/lib/utils/stream-extractor";
 
 export interface StreamRow {
@@ -257,18 +258,33 @@ export function LiveStreamAdminPanel({ streams }: { streams: StreamRow[] }) {
               {/* Embed Preview Frame */}
               <div className="relative aspect-video w-full md:w-72 overflow-hidden rounded-xl bg-black border border-border shrink-0">
                 {extractedResult.platform === "facebook" ? (
-                  <iframe
-                    src={extractedResult.embedUrl}
-                    title="Facebook Live Extracted Preview"
-                    allow="autoplay; clipboard-write; encrypted-media; picture-in-picture; web-share"
-                    allowFullScreen
-                    className="h-full w-full border-0"
-                  />
+                  extractedResult.hasSpecificVideoId ? (
+                    <iframe
+                      src={extractedResult.embedUrl}
+                      title="Facebook Live Extracted Preview"
+                      allow="autoplay; clipboard-write; encrypted-media; picture-in-picture; web-share"
+                      allowFullScreen
+                      className="h-full w-full border-0"
+                    />
+                  ) : (
+                    <div className="relative h-full w-full">
+                      <iframe
+                        src={`https://www.youtube.com/embed/${TBC_DEFAULT_CURRENT_SERVICE_YOUTUBE_ID}?rel=0&modestbranding=1`}
+                        title="Facebook Live Simultaneous Broadcast Preview"
+                        allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+                        allowFullScreen
+                        className="h-full w-full border-0"
+                      />
+                      <div className="absolute top-2 left-2 z-10 rounded-full bg-blue-600 px-2 py-0.5 text-[9px] font-bold text-white shadow">
+                        Facebook Simulcast Feed
+                      </div>
+                    </div>
+                  )
                 ) : extractedResult.platform === "youtube" ? (
                   <iframe
                     src={extractedResult.embedUrl}
                     title="YouTube Live Extracted Preview"
-                    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
                     allowFullScreen
                     className="h-full w-full border-0"
                   />

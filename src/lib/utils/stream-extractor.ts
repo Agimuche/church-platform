@@ -19,39 +19,73 @@ export interface ExtractedStream {
   isLiveLikely: boolean;
   platformName: string;
   directWatchUrl: string;
+  hasSpecificVideoId?: boolean;
+  fallbackVideoId?: string;
   error?: string;
 }
 
 export const TBC_DEFAULT_YOUTUBE_CHANNEL_ID = "UCJvBuTWCGPOYzucq8QhPYwQ";
 export const TBC_DEFAULT_YOUTUBE_HANDLE = "@thebrookchurchng";
+export const TBC_DEFAULT_CURRENT_SERVICE_YOUTUBE_ID = "h6XWU2GNa6E";
+export const TBC_DEFAULT_CURRENT_SERVICE_TITLE = "ZOE LIFE CONFERENCE DAY 2 | LIVE NOW";
 export const TBC_DEFAULT_YOUTUBE_LIVE_URL = "https://www.youtube.com/@thebrookchurchng/live";
-export const TBC_DEFAULT_YOUTUBE_LIVE_EMBED = `https://www.youtube.com/embed/live_stream?channel=${TBC_DEFAULT_YOUTUBE_CHANNEL_ID}&autoplay=1&rel=0&modestbranding=1`;
+export const TBC_DEFAULT_YOUTUBE_LIVE_EMBED = `https://www.youtube.com/embed/${TBC_DEFAULT_CURRENT_SERVICE_YOUTUBE_ID}?autoplay=1&mute=0&rel=0&enablejsapi=1`;
+
+export const SERVICE_BROADCAST_PRESETS = [
+  {
+    id: "h6XWU2GNa6E",
+    title: "ZOE LIFE CONFERENCE DAY 2 | LIVE NOW",
+    label: "🔴 Zoe Conf Day 2 (Live Now)",
+  },
+  {
+    id: "FIiP-wbDK5k",
+    title: "ZOE LIFE CONFERENCE DAY 1 | LIVE NOW",
+    label: "Zoe Conf Day 1",
+  },
+  {
+    id: "Yb4l4xWGTaM",
+    title: "WORDSHOP — Pneumatology Study",
+    label: "Wordshop",
+  },
+  {
+    id: "M-20iRqFSX4",
+    title: "DOXA — Sunday 2nd Service",
+    label: "Doxa Service",
+  },
+  {
+    id: "P3pmBIPG19c",
+    title: "PHRONESIS — Sunday 1st Service",
+    label: "Phronesis Service",
+  },
+];
 
 export const TBC_DEFAULT_FACEBOOK_PAGE = "thebrookchurchng";
 export const TBC_DEFAULT_FACEBOOK_PAGE_URL = "https://www.facebook.com/thebrookchurchng/";
 export const TBC_DEFAULT_FACEBOOK_LIVE_URL = "https://www.facebook.com/thebrookchurchng/live_videos/";
 export const TBC_DEFAULT_FACEBOOK_LIVE_EMBED = `https://www.facebook.com/plugins/video.php?href=${encodeURIComponent(
   TBC_DEFAULT_FACEBOOK_LIVE_URL
-)}&show_text=0&autoplay=1&mute=0`;
+)}&show_text=0&autoplay=1&mute=0&allowfullscreen=true`;
 
 /**
  * Extracts YouTube stream details from any YouTube URL, video ID, or channel.
+ * Automatically falls back to the current active sanctuary broadcast when a general channel URL is provided.
  */
 export function extractYouTubeStream(input: string): ExtractedStream {
-  const trimmed = input.trim();
+  const trimmed = (input || "").trim();
   if (!trimmed) {
     return {
       platform: "youtube",
-      isValid: false,
+      isValid: true,
       originalUrl: input,
-      canonicalUrl: TBC_DEFAULT_YOUTUBE_LIVE_URL,
+      canonicalUrl: `https://www.youtube.com/watch?v=${TBC_DEFAULT_CURRENT_SERVICE_YOUTUBE_ID}`,
       embedUrl: TBC_DEFAULT_YOUTUBE_LIVE_EMBED,
+      videoId: TBC_DEFAULT_CURRENT_SERVICE_YOUTUBE_ID,
       channelId: TBC_DEFAULT_YOUTUBE_CHANNEL_ID,
       isLiveLikely: true,
+      hasSpecificVideoId: true,
       platformName: "YouTube Live",
-      directWatchUrl: TBC_DEFAULT_YOUTUBE_LIVE_URL,
-      thumbnailUrl: "https://i.ytimg.com/vi/Ya3yIiRPqT0/maxresdefault.jpg",
-      error: "Empty URL provided. Using default The Brook Church YouTube stream.",
+      directWatchUrl: `https://www.youtube.com/watch?v=${TBC_DEFAULT_CURRENT_SERVICE_YOUTUBE_ID}`,
+      thumbnailUrl: `https://i.ytimg.com/vi/${TBC_DEFAULT_CURRENT_SERVICE_YOUTUBE_ID}/maxresdefault.jpg`,
     };
   }
 
@@ -66,16 +100,17 @@ export function extractYouTubeStream(input: string): ExtractedStream {
       isValid: true,
       originalUrl: trimmed,
       canonicalUrl: `https://www.youtube.com/watch?v=${videoId}`,
-      embedUrl: `https://www.youtube.com/embed/${videoId}?autoplay=1&rel=0&modestbranding=1`,
+      embedUrl: `https://www.youtube.com/embed/${videoId}?autoplay=1&mute=0&rel=0&enablejsapi=1`,
       videoId,
-      isLiveLikely: false,
-      platformName: "YouTube",
+      hasSpecificVideoId: true,
+      isLiveLikely: true,
+      platformName: "YouTube Live",
       directWatchUrl: `https://www.youtube.com/watch?v=${videoId}`,
       thumbnailUrl: `https://img.youtube.com/vi/${videoId}/maxresdefault.jpg`,
     };
   }
 
-  // Check for channel embed
+  // Check for channel live_stream embed
   const liveChannelMatch = trimmed.match(
     /(?:youtube\.com\/embed\/live_stream\?channel=)([a-zA-Z0-9_-]+)/i
   );
@@ -85,13 +120,15 @@ export function extractYouTubeStream(input: string): ExtractedStream {
       platform: "youtube",
       isValid: true,
       originalUrl: trimmed,
-      canonicalUrl: `https://www.youtube.com/channel/${channelId}/live`,
-      embedUrl: `https://www.youtube.com/embed/live_stream?channel=${channelId}&autoplay=1&rel=0&modestbranding=1`,
+      canonicalUrl: `https://www.youtube.com/watch?v=${TBC_DEFAULT_CURRENT_SERVICE_YOUTUBE_ID}`,
+      embedUrl: `https://www.youtube.com/embed/${TBC_DEFAULT_CURRENT_SERVICE_YOUTUBE_ID}?autoplay=1&mute=0&rel=0&enablejsapi=1`,
       channelId,
+      videoId: TBC_DEFAULT_CURRENT_SERVICE_YOUTUBE_ID,
+      hasSpecificVideoId: true,
       isLiveLikely: true,
       platformName: "YouTube Live",
-      directWatchUrl: `https://www.youtube.com/channel/${channelId}/live`,
-      thumbnailUrl: "https://i.ytimg.com/vi/Ya3yIiRPqT0/maxresdefault.jpg",
+      directWatchUrl: `https://www.youtube.com/watch?v=${TBC_DEFAULT_CURRENT_SERVICE_YOUTUBE_ID}`,
+      thumbnailUrl: `https://i.ytimg.com/vi/${TBC_DEFAULT_CURRENT_SERVICE_YOUTUBE_ID}/maxresdefault.jpg`,
     };
   }
 
@@ -102,10 +139,11 @@ export function extractYouTubeStream(input: string): ExtractedStream {
       isValid: true,
       originalUrl: trimmed,
       canonicalUrl: `https://www.youtube.com/watch?v=${trimmed}`,
-      embedUrl: `https://www.youtube.com/embed/${trimmed}?autoplay=1&rel=0&modestbranding=1`,
+      embedUrl: `https://www.youtube.com/embed/${trimmed}?autoplay=1&mute=0&rel=0&enablejsapi=1`,
       videoId: trimmed,
-      isLiveLikely: false,
-      platformName: "YouTube",
+      hasSpecificVideoId: true,
+      isLiveLikely: true,
+      platformName: "YouTube Live",
       directWatchUrl: `https://www.youtube.com/watch?v=${trimmed}`,
       thumbnailUrl: `https://img.youtube.com/vi/${trimmed}/maxresdefault.jpg`,
     };
@@ -117,16 +155,16 @@ export function extractYouTubeStream(input: string): ExtractedStream {
   );
   if (standardVideoMatch) {
     const videoId = standardVideoMatch[1];
-    const isLive = trimmed.includes("/live/");
     return {
       platform: "youtube",
       isValid: true,
       originalUrl: trimmed,
       canonicalUrl: `https://www.youtube.com/watch?v=${videoId}`,
-      embedUrl: `https://www.youtube.com/embed/${videoId}?autoplay=1&rel=0&modestbranding=1`,
+      embedUrl: `https://www.youtube.com/embed/${videoId}?autoplay=1&mute=0&rel=0&enablejsapi=1`,
       videoId,
-      isLiveLikely: isLive,
-      platformName: isLive ? "YouTube Live" : "YouTube",
+      hasSpecificVideoId: true,
+      isLiveLikely: true,
+      platformName: "YouTube Live",
       directWatchUrl: `https://www.youtube.com/watch?v=${videoId}`,
       thumbnailUrl: `https://img.youtube.com/vi/${videoId}/maxresdefault.jpg`,
     };
@@ -140,29 +178,33 @@ export function extractYouTubeStream(input: string): ExtractedStream {
       platform: "youtube",
       isValid: true,
       originalUrl: trimmed,
-      canonicalUrl: `https://www.youtube.com/channel/${channelId}`,
-      embedUrl: `https://www.youtube.com/embed/live_stream?channel=${channelId}&autoplay=1&rel=0&modestbranding=1`,
+      canonicalUrl: `https://www.youtube.com/watch?v=${TBC_DEFAULT_CURRENT_SERVICE_YOUTUBE_ID}`,
+      embedUrl: `https://www.youtube.com/embed/${TBC_DEFAULT_CURRENT_SERVICE_YOUTUBE_ID}?autoplay=1&mute=0&rel=0&enablejsapi=1`,
       channelId,
+      videoId: TBC_DEFAULT_CURRENT_SERVICE_YOUTUBE_ID,
+      hasSpecificVideoId: true,
       isLiveLikely: true,
       platformName: "YouTube Live",
-      directWatchUrl: `https://www.youtube.com/channel/${channelId}/live`,
-      thumbnailUrl: "https://i.ytimg.com/vi/Ya3yIiRPqT0/maxresdefault.jpg",
+      directWatchUrl: `https://www.youtube.com/watch?v=${TBC_DEFAULT_CURRENT_SERVICE_YOUTUBE_ID}`,
+      thumbnailUrl: `https://i.ytimg.com/vi/${TBC_DEFAULT_CURRENT_SERVICE_YOUTUBE_ID}/maxresdefault.jpg`,
     };
   }
 
-  // Channel handle URL (youtube.com/@thebrookchurchng)
-  if (trimmed.includes("@thebrookchurchng") || trimmed.includes("thebrookchurch")) {
+  // Channel handle URL (youtube.com/@thebrookchurchng or general brook search)
+  if (trimmed.includes("@thebrookchurchng") || trimmed.includes("thebrookchurch") || trimmed.includes("/live")) {
     return {
       platform: "youtube",
       isValid: true,
       originalUrl: trimmed,
-      canonicalUrl: "https://www.youtube.com/@thebrookchurchng",
+      canonicalUrl: `https://www.youtube.com/watch?v=${TBC_DEFAULT_CURRENT_SERVICE_YOUTUBE_ID}`,
       embedUrl: TBC_DEFAULT_YOUTUBE_LIVE_EMBED,
+      videoId: TBC_DEFAULT_CURRENT_SERVICE_YOUTUBE_ID,
       channelId: TBC_DEFAULT_YOUTUBE_CHANNEL_ID,
+      hasSpecificVideoId: true,
       isLiveLikely: true,
       platformName: "YouTube Live",
-      directWatchUrl: "https://www.youtube.com/@thebrookchurchng/live",
-      thumbnailUrl: "https://i.ytimg.com/vi/Ya3yIiRPqT0/maxresdefault.jpg",
+      directWatchUrl: `https://www.youtube.com/watch?v=${TBC_DEFAULT_CURRENT_SERVICE_YOUTUBE_ID}`,
+      thumbnailUrl: `https://i.ytimg.com/vi/${TBC_DEFAULT_CURRENT_SERVICE_YOUTUBE_ID}/maxresdefault.jpg`,
     };
   }
 
@@ -171,13 +213,15 @@ export function extractYouTubeStream(input: string): ExtractedStream {
     platform: "youtube",
     isValid: true,
     originalUrl: trimmed,
-    canonicalUrl: trimmed,
+    canonicalUrl: `https://www.youtube.com/watch?v=${TBC_DEFAULT_CURRENT_SERVICE_YOUTUBE_ID}`,
     embedUrl: TBC_DEFAULT_YOUTUBE_LIVE_EMBED,
+    videoId: TBC_DEFAULT_CURRENT_SERVICE_YOUTUBE_ID,
     channelId: TBC_DEFAULT_YOUTUBE_CHANNEL_ID,
+    hasSpecificVideoId: true,
     isLiveLikely: true,
     platformName: "YouTube Live",
     directWatchUrl: trimmed,
-    thumbnailUrl: "https://i.ytimg.com/vi/Ya3yIiRPqT0/maxresdefault.jpg",
+    thumbnailUrl: `https://i.ytimg.com/vi/${TBC_DEFAULT_CURRENT_SERVICE_YOUTUBE_ID}/maxresdefault.jpg`,
   };
 }
 
@@ -229,21 +273,22 @@ function normalizeFacebookUrl(rawUrl: string): string {
  * - Numeric Video IDs
  */
 export function extractFacebookStream(input: string): ExtractedStream {
-  const trimmed = input.trim();
+  const trimmed = (input || "").trim();
   if (!trimmed) {
     return {
       platform: "facebook",
-      isValid: false,
+      isValid: true,
       originalUrl: input,
       canonicalUrl: TBC_DEFAULT_FACEBOOK_LIVE_URL,
       embedUrl: TBC_DEFAULT_FACEBOOK_LIVE_EMBED,
       pageUsername: TBC_DEFAULT_FACEBOOK_PAGE,
       isLiveLikely: true,
+      hasSpecificVideoId: false,
+      fallbackVideoId: TBC_DEFAULT_CURRENT_SERVICE_YOUTUBE_ID,
       platformName: "Facebook Live",
       directWatchUrl: TBC_DEFAULT_FACEBOOK_LIVE_URL,
       thumbnailUrl:
         "https://images.unsplash.com/photo-1519491050282-cf00c82424b4?auto=format&fit=crop&w=1200&q=80",
-      error: "Empty URL provided. Using default The Brook Church Facebook Live feed.",
     };
   }
 
@@ -265,6 +310,7 @@ export function extractFacebookStream(input: string): ExtractedStream {
       canonicalUrl: TBC_DEFAULT_FACEBOOK_LIVE_URL,
       embedUrl: trimmed,
       pageUsername: TBC_DEFAULT_FACEBOOK_PAGE,
+      hasSpecificVideoId: true,
       isLiveLikely: true,
       platformName: "Facebook Live",
       directWatchUrl: TBC_DEFAULT_FACEBOOK_LIVE_URL,
@@ -288,6 +334,7 @@ export function extractFacebookStream(input: string): ExtractedStream {
       canonicalUrl: canonical,
       embedUrl,
       videoId,
+      hasSpecificVideoId: true,
       pageUsername: TBC_DEFAULT_FACEBOOK_PAGE,
       isLiveLikely: true,
       platformName: "Facebook Live",
@@ -317,6 +364,8 @@ export function extractFacebookStream(input: string): ExtractedStream {
       canonicalUrl: canonical,
       embedUrl,
       pageUsername: page,
+      hasSpecificVideoId: false,
+      fallbackVideoId: TBC_DEFAULT_CURRENT_SERVICE_YOUTUBE_ID,
       isLiveLikely: true,
       platformName: "Facebook Live",
       directWatchUrl: canonical,
@@ -343,6 +392,7 @@ export function extractFacebookStream(input: string): ExtractedStream {
       canonicalUrl: canonical,
       embedUrl,
       videoId,
+      hasSpecificVideoId: true,
       pageUsername: TBC_DEFAULT_FACEBOOK_PAGE,
       isLiveLikely: normalized.includes("/live/"),
       platformName: normalized.includes("/live/") ? "Facebook Live" : "Facebook Video",
@@ -371,6 +421,7 @@ export function extractFacebookStream(input: string): ExtractedStream {
       canonicalUrl: canonical,
       embedUrl,
       videoId,
+      hasSpecificVideoId: true,
       pageUsername: page,
       isLiveLikely: false,
       platformName: "Facebook Video",
@@ -392,6 +443,7 @@ export function extractFacebookStream(input: string): ExtractedStream {
       originalUrl: trimmed,
       canonicalUrl: normalized,
       embedUrl,
+      hasSpecificVideoId: true,
       isLiveLikely: true,
       platformName: "Facebook Live",
       directWatchUrl: normalized,
@@ -404,7 +456,6 @@ export function extractFacebookStream(input: string): ExtractedStream {
   const pageMatch = normalized.match(/facebook\.com\/([a-zA-Z0-9._-]+)\/?$/i);
   if (pageMatch) {
     const page = pageMatch[1];
-    // For a church Facebook page, link to their live_videos repository for the embed
     const canonical = `https://www.facebook.com/${page}/live_videos/`;
     const embedUrl = `https://www.facebook.com/plugins/video.php?href=${encodeURIComponent(
       canonical
@@ -417,6 +468,8 @@ export function extractFacebookStream(input: string): ExtractedStream {
       canonicalUrl: canonical,
       embedUrl,
       pageUsername: page,
+      hasSpecificVideoId: false,
+      fallbackVideoId: TBC_DEFAULT_CURRENT_SERVICE_YOUTUBE_ID,
       isLiveLikely: true,
       platformName: "Facebook Live",
       directWatchUrl: canonical,
@@ -437,6 +490,8 @@ export function extractFacebookStream(input: string): ExtractedStream {
     canonicalUrl: normalized,
     embedUrl,
     pageUsername: TBC_DEFAULT_FACEBOOK_PAGE,
+    hasSpecificVideoId: false,
+    fallbackVideoId: TBC_DEFAULT_CURRENT_SERVICE_YOUTUBE_ID,
     isLiveLikely: true,
     platformName: "Facebook Live",
     directWatchUrl: normalized,

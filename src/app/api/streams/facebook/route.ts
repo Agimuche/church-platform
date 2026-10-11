@@ -29,7 +29,7 @@ export async function GET() {
       isLive: !!activeStream,
       stream: {
         ...extracted,
-        title: activeStream?.title || "Sunday Phronesis & Doxa Service",
+        title: activeStream?.title || "ZOE LIFE CONFERENCE DAY 2 — LIVE SANCTUARY BROADCAST",
         description: activeStream?.description || "Live from The Brook Church Sanctuary, Calabar.",
         scheduledStart: activeStream?.scheduledStart,
         actualStart: activeStream?.actualStart,

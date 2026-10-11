@@ -15,7 +15,28 @@ const YOUTUBE_CHANNEL_URL = "https://www.youtube.com/@thebrookchurchng";
 // Videos from the RSS feed (most recent first) plus known videos
 const YOUTUBE_VIDEOS = [
   {
-    id: "Ya3yIiRPqT0",
+    id: "h6XWU2GNa6E",
+    title: "ZOE LIFE CONFERENCE DAY 2 | LIVE NOW",
+    description: "Live from The Brook Church Sanctuary, Calabar. Worship, Word, and Pneumatology with Pastors Ose & Naomi Imiemohon.",
+    publishedAt: "2026-10-04",
+    category: "🔴 Current Live Broadcast",
+  },
+  {
+    id: "FIiP-wbDK5k",
+    title: "ZOE LIFE CONFERENCE DAY 1 | LIVE NOW",
+    description: "Day 1 of the Zoe Life Global Conference. Divine revelation of life and immortality through the Gospel.",
+    publishedAt: "2026-10-03",
+    category: "Special Conference",
+  },
+  {
+    id: "Yb4l4xWGTaM",
+    title: "WORDSHOP — Pneumatology",
+    description: "In-depth teaching on the Holy Spirit and supernatural divine guidance.",
+    publishedAt: "2026-10-01",
+    category: "Midweek Service",
+  },
+  {
+    id: "M-20iRqFSX4",
     title: "DOXA — Sunday 2nd Service",
     description: "Experience the atmosphere of intense glory, worship and the manifested presence of God in this Doxa service.",
     publishedAt: "2026-09-27",

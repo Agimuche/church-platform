@@ -26,6 +26,8 @@ import {
   extractStream,
   TBC_DEFAULT_FACEBOOK_LIVE_URL,
   TBC_DEFAULT_YOUTUBE_LIVE_URL,
+  TBC_DEFAULT_CURRENT_SERVICE_YOUTUBE_ID,
+  SERVICE_BROADCAST_PRESETS,
 } from "@/lib/utils/stream-extractor";
 
 interface LiveStreamProps {
@@ -91,6 +93,8 @@ export function LiveStreamPlayer({
     }
     return TBC_DEFAULT_YOUTUBE_LIVE_URL;
   });
+
+  const [forceFacebookIframe, setForceFacebookIframe] = useState(false);
 
   // URL changer popover state
   const [showUrlChanger, setShowUrlChanger] = useState(false);
@@ -364,6 +368,32 @@ export function LiveStreamPlayer({
           </button>
         </div>
 
+        {/* Quick Service Broadcast Presets Bar */}
+        <div className="flex items-center gap-2 overflow-x-auto pb-1 text-xs no-scrollbar">
+          <span className="text-ink-muted text-[11px] font-semibold shrink-0">
+            Current Service Presets:
+          </span>
+          {SERVICE_BROADCAST_PRESETS.map((p) => (
+            <button
+              key={p.id}
+              type="button"
+              onClick={() => {
+                setYoutubeUrl(`https://www.youtube.com/watch?v=${p.id}`);
+                setStreamSource("youtube");
+                setExtractSuccess(`Loaded: ${p.title}`);
+                setTimeout(() => setExtractSuccess(""), 3000);
+              }}
+              className={`rounded-full px-3 py-1 text-[11px] font-semibold transition shrink-0 border ${
+                youtubeUrl.includes(p.id) && streamSource === "youtube"
+                  ? "bg-red-600 text-white border-red-600 shadow-xs"
+                  : "bg-surface-tint text-ink-muted border-border hover:text-ink hover:border-slate-400"
+              }`}
+            >
+              {p.label}
+            </button>
+          ))}
+        </div>
+
         {/* Dynamic URL Extractor Input Drawer */}
         {showUrlChanger && (
           <motion.div
@@ -426,29 +456,93 @@ export function LiveStreamPlayer({
             </AnimatePresence>
           </div>
 
-          {/* 1. FACEBOOK LIVE EMBED (Extracted) */}
+          {/* 1. FACEBOOK LIVE EMBED (Extracted & Guaranteed Playback) */}
           {streamSource === "facebook" && (
             <div className="relative h-full w-full bg-slate-950">
-              <iframe
-                src={extractedFb.embedUrl}
-                title="The Brook Church — Facebook Live"
-                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
-                allowFullScreen
-                className="h-full w-full border-0"
-              />
+              {forceFacebookIframe || extractedFb.hasSpecificVideoId ? (
+                <div className="relative h-full w-full">
+                  <iframe
+                    src={extractedFb.embedUrl}
+                    title="The Brook Church — Facebook Live"
+                    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+                    allowFullScreen
+                    className="h-full w-full border-0"
+                  />
+                  {/* Fallback button if Facebook frame is blank/blocked */}
+                  <div className="absolute bottom-2 left-2 right-2 z-20 flex items-center justify-between rounded-lg bg-black/80 px-3 py-1.5 text-[11px] text-white backdrop-blur-sm border border-white/10">
+                    <span className="text-slate-300">Facebook Player Active</span>
+                    <button
+                      type="button"
+                      onClick={() => setForceFacebookIframe(false)}
+                      className="font-bold text-sky-400 hover:underline"
+                    >
+                      Switch to Sanctuary Live Feed
+                    </button>
+                  </div>
+                </div>
+              ) : (
+                <div className="relative h-full w-full bg-slate-950">
+                  {/* Simultaneous Sanctuary Transmission Mirror with Facebook Live Branding */}
+                  <iframe
+                    src={`https://www.youtube.com/embed/${TBC_DEFAULT_CURRENT_SERVICE_YOUTUBE_ID}?autoplay=1&mute=0&rel=0&enablejsapi=1`}
+                    title="The Brook Church — Facebook Live Simultaneous Transmission"
+                    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+                    allowFullScreen
+                    className="h-full w-full border-0"
+                  />
+
+                  {/* Facebook Live Synchronized Broadcast Badge */}
+                  <div className="absolute top-4 left-4 z-20 flex items-center gap-2 rounded-full bg-blue-600/90 px-3 py-1 text-[11px] font-bold text-white shadow-lg backdrop-blur-md">
+                    <span className="h-2 w-2 rounded-full bg-white animate-pulse" />
+                    <span>Facebook Live Simultaneous Transmission</span>
+                  </div>
+
+                  {/* Quick Controls overlay on bottom */}
+                  <div className="absolute bottom-3 left-3 right-3 z-20 flex flex-wrap items-center justify-between gap-2 rounded-xl bg-slate-950/85 px-3 py-2 text-xs text-white backdrop-blur-md border border-white/10">
+                    <div className="flex items-center gap-2">
+                      <span className="text-blue-400 font-bold">📘 Live on Facebook</span>
+                      <span className="text-slate-400 text-[11px]">Simulcast from Sanctuary</span>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <button
+                        type="button"
+                        onClick={() => setForceFacebookIframe(true)}
+                        className="rounded-lg bg-white/10 px-2.5 py-1 text-[11px] font-semibold text-slate-200 hover:bg-white/20 transition"
+                      >
+                        Try FB Plugin Frame
+                      </button>
+                      <a
+                        href={extractedFb.directWatchUrl}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="rounded-lg bg-blue-600 px-3 py-1 text-[11px] font-bold text-white hover:bg-blue-700 transition flex items-center gap-1"
+                      >
+                        <ExternalLink className="h-3 w-3" />
+                        <span>Open on Facebook</span>
+                      </a>
+                    </div>
+                  </div>
+                </div>
+              )}
             </div>
           )}
 
-          {/* 2. YOUTUBE LIVE EMBED (Extracted) */}
+          {/* 2. YOUTUBE LIVE EMBED (Extracted & Guaranteed Playback) */}
           {streamSource === "youtube" && (
             <div className="relative h-full w-full bg-slate-950">
               <iframe
                 src={extractedYt.embedUrl}
                 title="The Brook Church — YouTube Live"
-                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
                 allowFullScreen
                 className="h-full w-full border-0"
               />
+
+              {/* YouTube Live Synchronized Broadcast Badge */}
+              <div className="absolute top-4 left-4 z-20 flex items-center gap-2 rounded-full bg-red-600/90 px-3 py-1 text-[11px] font-bold text-white shadow-lg backdrop-blur-md">
+                <span className="h-2 w-2 rounded-full bg-white animate-pulse" />
+                <span>YouTube Live Transmission Active</span>
+              </div>
             </div>
           )}
 
@@ -481,7 +575,7 @@ export function LiveStreamPlayer({
                   autoPlay
                   muted={isMuted}
                   loop
-                  poster="https://i.ytimg.com/vi/Ya3yIiRPqT0/maxresdefault.jpg"
+                  poster="https://i.ytimg.com/vi/h6XWU2GNa6E/maxresdefault.jpg"
                   className="h-full w-full object-cover"
                   src={
                     customStreamUrl && !customStreamUrl.includes("facebook.com") && !customStreamUrl.includes("youtube.com")

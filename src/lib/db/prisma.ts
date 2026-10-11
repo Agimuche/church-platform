@@ -138,6 +138,28 @@ function createInitialStore(): Record<string, any[]> {
 
   const media = [
     {
+      id: "media-zoe-conf-live",
+      title: "ZOE LIFE CONFERENCE DAY 2 — LIVE SANCTUARY BROADCAST",
+      slug: "zoe-life-conference-day-2-live",
+      description: "Live from The Brook Church Sanctuary, Calabar. Worship, Word, and Pneumatology with Pastors Ose & Naomi Imiemohon.",
+      type: "SERMON_VIDEO",
+      speakerId: "speaker-ose-imiemohon",
+      categoryId: "cat-grace",
+      thumbnailUrl: "https://i.ytimg.com/vi/h6XWU2GNa6E/maxresdefault.jpg",
+      fileUrl: "https://www.youtube.com/watch?v=h6XWU2GNa6E",
+      visibility: "PUBLIC",
+      price: null,
+      allowDownload: true,
+      isPublished: true,
+      isFeatured: true,
+      publishedAt: new Date(),
+      durationSeconds: 7200,
+      viewCount: 2840,
+      createdById: superAdmin.id,
+      createdAt: new Date(),
+      updatedAt: new Date(),
+    },
+    {
       id: "media-doxa",
       title: "DOXA — Manifesting The Glory of God",
       slug: "doxa-manifesting-the-glory-of-god",
@@ -426,6 +448,25 @@ function createInitialStore(): Record<string, any[]> {
   nextSunday.setHours(8, 0, 0, 0);
 
   const liveStreams = [
+    {
+      id: "tbc-stream-live-current",
+      title: "ZOE LIFE CONFERENCE DAY 2 — LIVE SANCTUARY BROADCAST",
+      description: "Live from The Brook Church Sanctuary, Calabar. Worship, Word, and Pneumatology with Pastors Ose & Naomi Imiemohon.",
+      thumbnailUrl: "https://i.ytimg.com/vi/h6XWU2GNa6E/maxresdefault.jpg",
+      scheduledStart: new Date(Date.now() - 45 * 60 * 1000),
+      scheduledEnd: null,
+      actualStart: new Date(Date.now() - 45 * 60 * 1000),
+      actualEnd: null,
+      status: "LIVE",
+      provider: "youtube",
+      providerStreamId: "h6XWU2GNa6E",
+      playbackUrl: "https://www.youtube.com/watch?v=h6XWU2GNa6E",
+      viewerCount: 1420,
+      createdById: superAdmin.id,
+      relatedSermonId: "media-doxa",
+      createdAt: new Date(),
+      updatedAt: new Date(),
+    },
     {
       id: "tbc-stream-phronesis",
       title: "Sunday Phronesis Service — The Way of the Spirit",

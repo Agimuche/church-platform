@@ -3,7 +3,10 @@
 import { useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
-import { extractFacebookStream } from "@/lib/utils/stream-extractor";
+import {
+  extractFacebookStream,
+  TBC_DEFAULT_CURRENT_SERVICE_YOUTUBE_ID,
+} from "@/lib/utils/stream-extractor";
 
 export type PlatformType = "all" | "youtube" | "facebook" | "instagram";
 
@@ -26,21 +29,21 @@ export interface FeaturedMessage {
 
 export const FEATURED_MESSAGES_DATA: FeaturedMessage[] = [
   {
-    id: "yt-doxa-sep27",
-    title: "DOXA — Manifesting The Glory of God",
-    subtitle: "Walking in Supernatural Grace & Unveiling the Zoe Life",
+    id: "yt-zoe-live-current",
+    title: "ZOE LIFE CONFERENCE DAY 2 | LIVE NOW",
+    subtitle: "Divine Impartation & The Pneumatic Realm — Live Sanctuary Broadcast",
     platform: "youtube",
-    program: "DOXA Service (Sundays 9:15 AM)",
+    program: "Zoe Life Global Conference",
     speaker: "Pastor Ose Imiemohon",
-    date: "Sep 27, 2026",
-    duration: "1h 48m",
-    youtubeId: "Ya3yIiRPqT0",
-    url: "https://www.youtube.com/watch?v=Ya3yIiRPqT0",
-    thumbnailUrl: "https://i.ytimg.com/vi/Ya3yIiRPqT0/maxresdefault.jpg",
+    date: "Live Broadcast",
+    duration: "Live Now",
+    youtubeId: "h6XWU2GNa6E",
+    url: "https://www.youtube.com/watch?v=h6XWU2GNa6E",
+    thumbnailUrl: "https://i.ytimg.com/vi/h6XWU2GNa6E/maxresdefault.jpg",
     summary:
-      "A profound atmosphere of the Holy Spirit examining the manifest presence of God, divine Zoe life, and supernatural alignment in our daily walk.",
-    scripture: "2 Corinthians 3:18 · John 10:10",
-    viewsOrEngagement: "2.4K views",
+      "Live sanctuary transmission of the Zoe Life Conference. Encounter the ministry of the Holy Spirit, profound revelation of divine life, and pneumatic worship.",
+    scripture: "John 10:10 · 2 Corinthians 3:18",
+    viewsOrEngagement: "🔴 LIVE BROADCAST",
   },
   {
     id: "yt-wordshop-sep24",
@@ -208,14 +211,16 @@ export function FeaturedMessagesSection() {
   const openPlayer = (msg: FeaturedMessage) => {
     if (msg.youtubeId) {
       setModalStream({
-        embedUrl: `https://www.youtube.com/embed/${msg.youtubeId}?autoplay=1&rel=0&modestbranding=1`,
+        embedUrl: `https://www.youtube.com/embed/${msg.youtubeId}?autoplay=1&mute=0&rel=0&enablejsapi=1`,
         title: msg.title,
         platform: "youtube",
       });
     } else if (msg.platform === "facebook") {
       const fb = extractFacebookStream(msg.url);
       setModalStream({
-        embedUrl: fb.embedUrl,
+        embedUrl: fb.hasSpecificVideoId
+          ? fb.embedUrl
+          : `https://www.youtube.com/embed/${TBC_DEFAULT_CURRENT_SERVICE_YOUTUBE_ID}?autoplay=1&mute=0&rel=0&enablejsapi=1`,
         title: msg.title,
         platform: "facebook",
       });

@@ -4,16 +4,25 @@ import React, { useState, useRef } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { motion, useMotionValue, useTransform, useSpring } from "motion/react";
-import { Play, Sparkles, Video } from "lucide-react";
+import { ExternalLink, Sparkles, Video } from "lucide-react";
+import {
+  TBC_DEFAULT_CURRENT_SERVICE_YOUTUBE_ID,
+  TBC_DEFAULT_FACEBOOK_LIVE_URL,
+} from "@/lib/utils/stream-extractor";
 
 interface HeroVisualProps {
-  isLive: boolean;
+  isLive?: boolean;
   liveTitle?: string;
   liveDescription?: string;
 }
 
-export function Hero3dVisual({ isLive, liveTitle, liveDescription }: HeroVisualProps) {
+export function Hero3dVisual({
+  isLive: _isLive = true,
+  liveTitle,
+  liveDescription: _liveDescription,
+}: HeroVisualProps) {
   const [activeMode, setActiveMode] = useState<"broadcast" | "interactive3d">("broadcast");
+  const [platform, setPlatform] = useState<"youtube" | "facebook">("youtube");
   const cardRef = useRef<HTMLDivElement>(null);
 
   // 3D Motion values for mouse hover tilt
@@ -97,60 +106,82 @@ export function Hero3dVisual({ isLive, liveTitle, liveDescription }: HeroVisualP
         className="relative aspect-video w-full overflow-hidden rounded-3xl border border-white/25 bg-slate-950 shadow-2xl transition-all duration-200"
       >
         {activeMode === "broadcast" ? (
-          isLive ? (
-            <div className="relative flex h-full w-full flex-col items-center justify-center p-6 text-center text-white">
-              {/* Dynamic animated videographics background */}
-              <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,_var(--tw-gradient-stops))] from-blue-900/60 via-slate-950 to-slate-950" />
-              
-              {/* Animated audio wave graphic */}
-              <div className="relative z-10 flex items-center gap-1 mb-4">
-                {[4, 16, 28, 12, 22, 10, 26, 8, 18].map((h, i) => (
-                  <motion.span
-                    key={i}
-                    animate={{ height: [4, h, 6] }}
-                    transition={{
-                      repeat: Infinity,
-                      duration: 0.8 + (i % 3) * 0.2,
-                      repeatType: "reverse",
-                      ease: "easeInOut",
-                    }}
-                    className="w-1 rounded-full bg-cyan-400"
-                    style={{ height: `${h}px` }}
-                  />
-                ))}
-              </div>
-
-              <div className="relative z-10">
-                <span className="inline-flex items-center gap-1.5 rounded-full bg-red-600/90 px-3.5 py-1 text-xs font-bold uppercase tracking-wider text-white shadow-lg animate-pulse">
-                  <span className="h-2 w-2 rounded-full bg-white" />
-                  Live Broadcast Active
-                </span>
-                <h3 className="mt-3 text-xl font-bold font-serif sm:text-2xl text-white drop-shadow-md">
-                  {liveTitle || "Phronesis & Doxa Sunday Experience"}
-                </h3>
-                <p className="mt-1 text-xs text-sky-200 max-w-md mx-auto line-clamp-2">
-                  {liveDescription || "Streaming live from the Sanctuary with Pastors Ose & Naomi Imiemohon."}
-                </p>
-                <Link
-                  href="/live"
-                  className="mt-5 inline-flex items-center gap-2 rounded-full bg-red-600 px-6 py-2.5 text-xs font-bold text-white shadow-xl hover:bg-red-500 hover:scale-105 transition"
-                >
-                  <Play className="h-3.5 w-3.5 fill-current" />
-                  <span>Enter Live Sanctuary →</span>
-                </Link>
-              </div>
-            </div>
-          ) : (
-            <div className="relative h-full w-full">
+          <div className="relative h-full w-full bg-slate-950">
+            {/* Embedded Live Video Player */}
+            {platform === "youtube" ? (
               <iframe
-                src="https://www.youtube.com/embed/Ya3yIiRPqT0?rel=0&modestbranding=1&controls=1&autoplay=0"
-                title="The Brook Church — Latest Service Broadcast"
+                src={`https://www.youtube.com/embed/${TBC_DEFAULT_CURRENT_SERVICE_YOUTUBE_ID}?autoplay=1&mute=1&rel=0&enablejsapi=1`}
+                title="The Brook Church — Live Stream"
                 allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
                 allowFullScreen
                 className="h-full w-full border-0"
               />
+            ) : (
+              <div className="relative h-full w-full">
+                <iframe
+                  src={`https://www.youtube.com/embed/${TBC_DEFAULT_CURRENT_SERVICE_YOUTUBE_ID}?autoplay=1&mute=1&rel=0&enablejsapi=1`}
+                  title="The Brook Church — Facebook Live Simultaneous Stream"
+                  allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+                  allowFullScreen
+                  className="h-full w-full border-0"
+                />
+                <div className="absolute bottom-2 left-2 right-2 z-20 flex items-center justify-between rounded-lg bg-black/85 px-3 py-1.5 text-[11px] text-white backdrop-blur-sm border border-white/10">
+                  <span className="text-blue-400 font-semibold">📘 Facebook Live Simulcast</span>
+                  <a
+                    href={TBC_DEFAULT_FACEBOOK_LIVE_URL}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="font-bold text-sky-400 hover:underline flex items-center gap-1"
+                  >
+                    <span>Open FB</span>
+                    <ExternalLink className="h-3 w-3" />
+                  </a>
+                </div>
+              </div>
+            )}
+
+            {/* Top Bar Floating Status and Platform Toggle */}
+            <div className="absolute top-3 left-3 right-3 z-20 flex items-center justify-between pointer-events-none">
+              <div className="pointer-events-auto flex items-center gap-2">
+                <span className="inline-flex items-center gap-1.5 rounded-full bg-red-600/90 px-3 py-1 text-[11px] font-bold text-white shadow-lg backdrop-blur-md animate-pulse">
+                  <span className="h-2 w-2 rounded-full bg-white" />
+                  <span>LIVE TRANSMISSION</span>
+                </span>
+                <span className="hidden sm:inline-block rounded-full bg-black/60 px-2.5 py-0.5 text-[10px] font-medium text-slate-200 backdrop-blur-md">
+                  {liveTitle || "Zoe Life Conference Day 2"}
+                </span>
+              </div>
+
+              {/* Platform Switcher & Sanctuary Link */}
+              <div className="pointer-events-auto flex items-center gap-1.5 bg-black/70 p-1 rounded-full backdrop-blur-md border border-white/10 text-[10px] font-bold">
+                <button
+                  type="button"
+                  onClick={() => setPlatform("youtube")}
+                  className={`px-2.5 py-0.5 rounded-full transition ${
+                    platform === "youtube" ? "bg-red-600 text-white" : "text-slate-300 hover:text-white"
+                  }`}
+                >
+                  YouTube
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setPlatform("facebook")}
+                  className={`px-2.5 py-0.5 rounded-full transition ${
+                    platform === "facebook" ? "bg-blue-600 text-white" : "text-slate-300 hover:text-white"
+                  }`}
+                >
+                  Facebook
+                </button>
+                <Link
+                  href="/live"
+                  className="ml-1 px-2.5 py-0.5 rounded-full bg-white/20 text-white hover:bg-white/30 transition flex items-center gap-1"
+                >
+                  <span>Sanctuary</span>
+                  <span>→</span>
+                </Link>
+              </div>
             </div>
-          )
+          </div>
         ) : (
           /* 3D Grace Portal Interactive Graphics Mode */
           <div className="relative flex h-full w-full flex-col items-center justify-center p-8 text-center text-white overflow-hidden">

@@ -121,24 +121,22 @@ export function HeroSection({ liveStream, nextStream }: HeroSectionProps) {
           {/* Subtle 3D tilt container */}
           <div className="relative aspect-video overflow-hidden rounded-3xl border border-white/20 bg-slate-950 shadow-2xl tbc-glow">
             {liveStream ? (
-              <div className="flex h-full flex-col items-center justify-center p-8 text-center text-white bg-radial from-slate-900 to-black">
-                <span className="text-xs text-red-400 font-bold uppercase tracking-wider animate-pulse flex items-center gap-1.5">
-                  <span className="h-2 w-2 rounded-full bg-red-500 animate-pulse" />
-                  Live Broadcast Online
-                </span>
-                <p className="mt-3 font-serif text-2xl font-bold text-white">{liveStream.title}</p>
-                <p className="mt-1 text-xs text-slate-400">Streaming live on web and all devices</p>
-                <Link
-                  href="/live"
-                  className="mt-6 inline-flex items-center gap-2 rounded-full bg-red-600 px-6 py-2.5 text-xs font-bold text-white shadow-xl hover:bg-red-700 hover:scale-105 transition"
-                >
-                  <Play className="h-3.5 w-3.5 fill-current" />
-                  <span>Join Sanctuary Live Broadcast</span>
-                </Link>
+              <div className="relative h-full w-full">
+                <iframe
+                  src={`https://www.youtube.com/embed/${liveStream.providerStreamId || "h6XWU2GNa6E"}?autoplay=1&mute=1&rel=0&enablejsapi=1`}
+                  title={liveStream.title}
+                  allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+                  allowFullScreen
+                  className="w-full h-full border-0"
+                />
+                <div className="absolute top-3 left-3 z-20 flex items-center gap-2 rounded-full bg-red-600/90 px-3 py-1 text-xs font-bold text-white shadow-lg backdrop-blur-md animate-pulse">
+                  <span className="h-2 w-2 rounded-full bg-white" />
+                  <span>LIVE TRANSMISSION</span>
+                </div>
               </div>
             ) : (
               <iframe
-                src="https://www.youtube.com/embed/Ya3yIiRPqT0?rel=0&modestbranding=1&controls=1"
+                src="https://www.youtube.com/embed/h6XWU2GNa6E?rel=0&modestbranding=1&controls=1"
                 title="The Brook Church — Latest Broadcast"
                 allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
                 allowFullScreen
