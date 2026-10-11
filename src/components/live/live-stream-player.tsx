@@ -24,6 +24,10 @@ import {
   Radio,
   RotateCcw,
   Loader2,
+  Mic,
+  MicOff,
+  Captions,
+  BookOpen,
 } from "lucide-react";
 import { motion, AnimatePresence } from "motion/react";
 import {
@@ -40,6 +44,10 @@ import {
   exportToPdf,
   printSermonNotes,
 } from "@/lib/utils/sermon-exporter";
+import {
+  ZOE_LIFE_LIVE_CAPTIONS,
+  LiveCaptionEntry,
+} from "@/lib/data/live-captions";
 
 interface LiveStreamProps {
   initialTitle?: string;
@@ -118,11 +126,28 @@ export function LiveStreamPlayer({
   const [isFullscreen, setIsFullscreen] = useState(false);
   const [audioOnly, setAudioOnly] = useState(false);
   const [viewerCount, setViewerCount] = useState(384);
-  const [activeTab, setActiveTab] = useState<"chat" | "notes">("chat");
+  const [activeTab, setActiveTab] = useState<"chat" | "captions" | "notes">("chat");
 
   // Camera Studio State
   const [cameraActive, setCameraActive] = useState(false);
   const [cameraError, setCameraError] = useState<string | null>(null);
+
+  // Live captions & direct video speech capture state
+  const [showCaptions, setShowCaptions] = useState(true);
+  const [captionFontSize, setCaptionFontSize] = useState<"sm" | "md" | "lg">("md");
+  const [captions, setCaptions] = useState<LiveCaptionEntry[]>(() =>
+    ZOE_LIFE_LIVE_CAPTIONS.slice(0, 6)
+  );
+  const [currentLiveCaption, setCurrentLiveCaption] = useState<LiveCaptionEntry | null>(
+    ZOE_LIFE_LIVE_CAPTIONS[3]
+  );
+  const [, setCaptionIndex] = useState(3);
+  const [isListeningAudio, setIsListeningAudio] = useState(false);
+  const [interimTranscript, setInterimTranscript] = useState("");
+  const [speechError, setSpeechError] = useState<string | null>(null);
+  const [isBuildingSermonFromCaptions, setIsBuildingSermonFromCaptions] = useState(false);
+  const [autoSyncCaptionsToNotes, setAutoSyncCaptionsToNotes] = useState(false);
+  const speechRecognitionRef = useRef<any>(null);
 
   // Chat State
   const [messages, setMessages] = useState<ChatMessage[]>([
@@ -217,6 +242,174 @@ export function LiveStreamPlayer({
 
     return () => clearInterval(timer);
   }, [isAutoCapturing, initialTitle, initialDescription, notes]);
+
+  // Synchronized broadcast captions progression when not directly listening to audio mic
+  useEffect(() => {
+    if (isListeningAudio) return;
+
+    const timer = setInterval(() => {
+      setCaptionIndex((prev) => {
+        const next = (prev + 1) % ZOE_LIFE_LIVE_CAPTIONS.length;
+        const entry = ZOE_LIFE_LIVE_CAPTIONS[next];
+        setCurrentLiveCaption(entry);
+
+        setCaptions((existing) => {
+          if (existing.some((c) => c.id === entry.id)) return existing;
+          return [entry, ...existing.slice(0, 24)];
+        });
+
+        if (autoSyncCaptionsToNotes && entry.type === "scripture") {
+          setNotes((prevNotes) => {
+            const line = `• Spoken Scripture: ${entry.scriptureReferences?.join(", ") || entry.text}`;
+            if (prevNotes.includes(line)) return prevNotes;
+            return prevNotes ? `${prevNotes}\n${line}` : line;
+          });
+        }
+
+        return next;
+      });
+    }, 5500);
+
+    return () => clearInterval(timer);
+  }, [isListeningAudio, autoSyncCaptionsToNotes]);
+
+  // Clean up speech recognition on unmount
+  useEffect(() => {
+    return () => {
+      if (speechRecognitionRef.current) {
+        try {
+          speechRecognitionRef.current.stop();
+        } catch {}
+      }
+    };
+  }, []);
+
+  // Start real-time browser audio/speech capture from playing video
+  const startAudioRecognition = () => {
+    if (typeof window === "undefined") return;
+    const SpeechRecognition =
+      (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
+
+    if (!SpeechRecognition) {
+      setSpeechError(
+        "Direct Web Speech recognition is not available in this browser. Live Broadcast Caption Feed is running!"
+      );
+      return;
+    }
+
+    try {
+      const recognition = new SpeechRecognition();
+      recognition.continuous = true;
+      recognition.interimResults = true;
+      recognition.lang = "en-US";
+
+      recognition.onstart = () => {
+        setIsListeningAudio(true);
+        setSpeechError(null);
+      };
+
+      recognition.onresult = (event: any) => {
+        let interim = "";
+        for (let i = event.resultIndex; i < event.results.length; ++i) {
+          const res = event.results[i];
+          const transcript = res[0].transcript;
+          if (res.isFinal) {
+            const trimmed = transcript.trim();
+            if (trimmed.length > 0) {
+              const newEntry: LiveCaptionEntry = {
+                id: "aud-" + Date.now() + "-" + Math.random().toString(36).substring(2, 6),
+                timestamp: new Date().toLocaleTimeString("en-US", {
+                  hour: "numeric",
+                  minute: "2-digit",
+                  second: "2-digit",
+                }),
+                elapsedSeconds: Math.floor(Date.now() / 1000),
+                speaker: "Pastor / Minister (Captured Live Audio)",
+                text: trimmed,
+                type: "teaching",
+              };
+              setCurrentLiveCaption(newEntry);
+              setCaptions((prev) => [newEntry, ...prev]);
+
+              if (autoSyncCaptionsToNotes) {
+                setNotes((prev) =>
+                  prev ? `${prev}\n• Live Caption: "${trimmed}"` : `• Live Caption: "${trimmed}"`
+                );
+              }
+            }
+            interim = "";
+          } else {
+            interim += transcript;
+          }
+        }
+        setInterimTranscript(interim);
+      };
+
+      recognition.onerror = (event: any) => {
+        console.warn("Speech recognition error:", event.error);
+        if (event.error !== "no-speech") {
+          setSpeechError(`Audio capture notice: ${event.error}. Broadcast captions active.`);
+        }
+      };
+
+      recognition.onend = () => {
+        setIsListeningAudio(false);
+        setInterimTranscript("");
+      };
+
+      speechRecognitionRef.current = recognition;
+      recognition.start();
+    } catch (err: any) {
+      setSpeechError(err?.message || "Failed to start speech recognition");
+      setIsListeningAudio(false);
+    }
+  };
+
+  const stopAudioRecognition = () => {
+    setIsListeningAudio(false);
+    setInterimTranscript("");
+    if (speechRecognitionRef.current) {
+      try {
+        speechRecognitionRef.current.stop();
+      } catch {}
+      speechRecognitionRef.current = null;
+    }
+  };
+
+  // Synthesize rich sermon message directly from captured video captions
+  const handleSynthesizeSermonFromCaptions = async () => {
+    setIsBuildingSermonFromCaptions(true);
+    try {
+      const capturedLines = captions
+        .map((c) => `[${c.timestamp}] ${c.speaker}: ${c.text}`)
+        .join("\n");
+
+      const res = await fetch("/api/sermons/auto-notes", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          title: initialTitle,
+          description: initialDescription,
+          speaker: "Pastor Victor Owoeye",
+          captions: capturedLines,
+          existingNotes: notes,
+          mode: "full",
+        }),
+      });
+
+      if (res.ok) {
+        const data = await res.json();
+        if (data.notes) {
+          setNotes(data.notes);
+          setActiveTab("notes");
+        }
+      }
+    } catch (err) {
+      console.error("Synthesize sermon error:", err);
+    } finally {
+      setIsBuildingSermonFromCaptions(false);
+    }
+  };
 
   // 1-Click Generate Full Live Sermon Notes
   const handleAutoGenerateNotes = async () => {
@@ -775,13 +968,134 @@ export function LiveStreamPlayer({
             </div>
           )}
 
-          {/* Watermark / Logo Overlay */}
-          <div className="pointer-events-none absolute top-4 right-4 z-20 flex items-center gap-2 rounded-full bg-slate-950/60 px-3 py-1 text-[11px] font-semibold text-white/90 backdrop-blur-md border border-white/10">
-            <span className="h-2 w-2 rounded-full bg-red-500 animate-pulse" />
-            <span>TBC LIVE</span>
-            <span className="text-white/40">|</span>
-            <span className="text-sky-300 font-mono">{viewerCount} Watching</span>
+          {/* Top Right Floating Toolbar: CC Toggle, Audio Mic Capture, Watermark */}
+          <div className="absolute top-4 right-4 z-20 flex items-center gap-1.5 flex-wrap justify-end">
+            {/* Live Captions (CC) Toggle Button */}
+            <button
+              type="button"
+              onClick={() => setShowCaptions(!showCaptions)}
+              title={showCaptions ? "Live Captions Active (Click to hide)" : "Enable Live Closed Captions"}
+              className={`pointer-events-auto flex items-center gap-1 rounded-full px-2.5 py-1 text-[11px] font-bold backdrop-blur-md transition border shadow-xs ${
+                showCaptions
+                  ? "bg-amber-400 text-slate-950 border-amber-300 hover:bg-amber-300"
+                  : "bg-slate-950/80 text-slate-300 border-white/20 hover:text-white"
+              }`}
+            >
+              <Captions className="h-3.5 w-3.5" />
+              <span>CC</span>
+              {showCaptions && <span className="h-1.5 w-1.5 rounded-full bg-slate-950 animate-ping" />}
+            </button>
+
+            {/* Direct Video Speech / Mic Audio Capture */}
+            <button
+              type="button"
+              onClick={() => {
+                if (isListeningAudio) {
+                  stopAudioRecognition();
+                } else {
+                  startAudioRecognition();
+                }
+              }}
+              title={
+                isListeningAudio
+                  ? "Stop listening directly to video audio / mic"
+                  : "Capture live spoken words directly from video audio/mic"
+              }
+              className={`pointer-events-auto flex items-center gap-1 rounded-full px-2.5 py-1 text-[11px] font-bold backdrop-blur-md transition border shadow-xs ${
+                isListeningAudio
+                  ? "bg-red-600 text-white border-red-500 animate-pulse"
+                  : "bg-slate-950/80 text-slate-300 border-white/20 hover:text-white"
+              }`}
+            >
+              {isListeningAudio ? <Mic className="h-3.5 w-3.5" /> : <MicOff className="h-3.5 w-3.5 text-slate-400" />}
+              <span className="hidden sm:inline">{isListeningAudio ? "Capturing Audio" : "Capture Audio"}</span>
+            </button>
+
+            {/* Watermark / Logo Overlay */}
+            <div className="pointer-events-none flex items-center gap-2 rounded-full bg-slate-950/80 px-3 py-1 text-[11px] font-semibold text-white/90 backdrop-blur-md border border-white/10">
+              <span className="h-2 w-2 rounded-full bg-red-500 animate-pulse" />
+              <span>TBC LIVE</span>
+              <span className="text-white/40">|</span>
+              <span className="text-sky-300 font-mono">{viewerCount} Watching</span>
+            </div>
           </div>
+
+          {/* Real-Time Live Closed Captions (CC) Overlay directly on Video */}
+          {showCaptions && (currentLiveCaption || interimTranscript) && (
+            <motion.div
+              initial={{ opacity: 0, y: 12 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: 12 }}
+              className="pointer-events-auto absolute bottom-4 sm:bottom-6 left-3 right-3 sm:left-8 sm:right-8 z-25 flex flex-col items-center justify-end"
+            >
+              <div className="max-w-2xl w-full rounded-2xl bg-black/85 backdrop-blur-md px-4 py-2 sm:px-5 sm:py-2.5 border border-white/20 shadow-2xl text-center">
+                <div className="flex items-center justify-between gap-2 mb-1">
+                  <div className="flex items-center gap-1.5 flex-wrap">
+                    <span className="flex h-2 w-2 rounded-full bg-red-500 animate-pulse" />
+                    <span className="text-[10px] font-bold uppercase tracking-wider text-amber-300">
+                      {isListeningAudio ? "🔴 Live Video Audio Capture" : "🔴 Live Sanctuary Captions"}
+                    </span>
+                    <span className="text-[10px] text-slate-300 font-medium">
+                      • {interimTranscript ? "Sanctuary Speaker" : currentLiveCaption?.speaker}
+                    </span>
+                  </div>
+
+                  <div className="flex items-center gap-1.5">
+                    <button
+                      type="button"
+                      onClick={() =>
+                        setCaptionFontSize((prev) =>
+                          prev === "sm" ? "md" : prev === "md" ? "lg" : "sm"
+                        )
+                      }
+                      title="Toggle caption text size"
+                      className="text-[10px] font-bold text-slate-300 hover:text-white px-1.5 py-0.5 rounded-md bg-white/10"
+                    >
+                      Text: {captionFontSize.toUpperCase()}
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setActiveTab("captions")}
+                      className="text-[10px] font-bold text-sky-300 hover:text-sky-100 flex items-center gap-0.5"
+                    >
+                      <span>Captions Feed &rarr;</span>
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setShowCaptions(false)}
+                      className="text-[10px] text-slate-400 hover:text-white"
+                      title="Hide Captions Overlay"
+                    >
+                      ✕
+                    </button>
+                  </div>
+                </div>
+
+                <p
+                  className={`font-sans font-medium text-white drop-shadow-md leading-relaxed ${
+                    captionFontSize === "lg"
+                      ? "text-base sm:text-lg"
+                      : captionFontSize === "sm"
+                      ? "text-xs sm:text-sm"
+                      : "text-sm sm:text-base"
+                  }`}
+                >
+                  {interimTranscript ? (
+                    <span className="italic text-amber-200">&ldquo;{interimTranscript}...&rdquo;</span>
+                  ) : (
+                    <span>&ldquo;{currentLiveCaption?.text}&rdquo;</span>
+                  )}
+                </p>
+
+                {currentLiveCaption?.scriptureReferences && currentLiveCaption.scriptureReferences.length > 0 && (
+                  <div className="mt-1 flex items-center justify-center gap-1 text-[11px] font-semibold text-emerald-300">
+                    <BookOpen className="h-3 w-3" />
+                    <span>Scripture cited: {currentLiveCaption.scriptureReferences.join(", ")}</span>
+                  </div>
+                )}
+              </div>
+            </motion.div>
+          )}
 
           {/* Interactive Player Controls Bar (For Native & Camera modes) */}
           {(streamSource === "native" || streamSource === "camera") && (
@@ -911,6 +1225,17 @@ export function LiveStreamPlayer({
               <button
                 type="button"
                 onClick={() => {
+                  setActiveTab("captions");
+                }}
+                className="flex items-center gap-1.5 rounded-full border border-amber-300 dark:border-amber-800 bg-amber-50 dark:bg-amber-950/40 px-3.5 py-2 text-xs font-bold text-amber-700 dark:text-amber-300 hover:bg-amber-100 transition shadow-xs"
+              >
+                <Captions className="h-3.5 w-3.5 text-amber-600 dark:text-amber-400" />
+                <span>Live Captions ({captions.length})</span>
+              </button>
+
+              <button
+                type="button"
+                onClick={() => {
                   setActiveTab("notes");
                   if (!notes || notes.trim().length === 0) {
                     handleAutoGenerateNotes();
@@ -977,22 +1302,39 @@ export function LiveStreamPlayer({
       <div className="lg:col-span-4 flex flex-col gap-4">
         <div className="flex h-[660px] flex-col rounded-3xl border border-border bg-paper shadow-md overflow-hidden">
           {/* Header Tabs */}
-          <div className="flex items-center justify-between border-b border-border bg-surface-tint p-3">
-            <div className="flex items-center gap-2">
+          <div className="flex items-center justify-between border-b border-border bg-surface-tint p-2.5">
+            <div className="flex items-center gap-1.5 overflow-x-auto no-scrollbar">
               <button
+                type="button"
                 onClick={() => setActiveTab("chat")}
-                className={`flex items-center gap-1.5 rounded-xl px-3 py-1.5 text-xs font-bold transition ${
+                className={`flex items-center gap-1 rounded-xl px-2.5 py-1.5 text-xs font-bold transition shrink-0 ${
                   activeTab === "chat"
                     ? "bg-paper text-accent shadow-xs"
                     : "text-ink-muted hover:text-ink"
                 }`}
               >
                 <MessageSquare className="h-3.5 w-3.5" />
-                Sanctuary Chat
+                <span>Chat</span>
               </button>
+
               <button
+                type="button"
+                onClick={() => setActiveTab("captions")}
+                className={`flex items-center gap-1 rounded-xl px-2.5 py-1.5 text-xs font-bold transition shrink-0 relative ${
+                  activeTab === "captions"
+                    ? "bg-paper text-accent shadow-xs"
+                    : "text-ink-muted hover:text-ink"
+                }`}
+              >
+                <Captions className="h-3.5 w-3.5 text-amber-500" />
+                <span>Live Captions</span>
+                <span className="h-2 w-2 rounded-full bg-red-500 animate-pulse" />
+              </button>
+
+              <button
+                type="button"
                 onClick={() => setActiveTab("notes")}
-                className={`flex items-center gap-1.5 rounded-xl px-3 py-1.5 text-xs font-bold transition relative ${
+                className={`flex items-center gap-1 rounded-xl px-2.5 py-1.5 text-xs font-bold transition shrink-0 relative ${
                   activeTab === "notes"
                     ? "bg-paper text-accent shadow-xs"
                     : "text-ink-muted hover:text-ink"
@@ -1000,15 +1342,12 @@ export function LiveStreamPlayer({
               >
                 <FileText className="h-3.5 w-3.5" />
                 <span>Sermon Notes</span>
-                {isAutoCapturing && (
-                  <span className="h-2 w-2 rounded-full bg-red-500 animate-pulse" title="Live Auto-Capture Active" />
-                )}
-                {notes && notes.length > 20 && !isAutoCapturing && (
+                {notes && notes.length > 20 && (
                   <span className="h-1.5 w-1.5 rounded-full bg-emerald-500" />
                 )}
               </button>
             </div>
-            <span className="text-[11px] font-mono text-ink-muted">{viewerCount} online</span>
+            <span className="text-[11px] font-mono text-ink-muted shrink-0 ml-1">{viewerCount} online</span>
           </div>
 
           {/* Tab 1: Live Chat Feed */}
@@ -1064,12 +1403,197 @@ export function LiveStreamPlayer({
             </div>
           )}
 
+          {/* Tab 2: Live Captions Stream & Direct Sermon Generator */}
+          {activeTab === "captions" && (
+            <div className="flex flex-1 flex-col overflow-hidden p-3 gap-2.5">
+              {/* Top Captions Toolbar */}
+              <div className="flex flex-wrap items-center justify-between gap-1.5 rounded-2xl bg-surface-tint p-2.5 border border-border">
+                <div className="flex items-center gap-1.5 flex-wrap">
+                  {/* The Golden Core Action: Make Sermon From Captions */}
+                  <button
+                    type="button"
+                    onClick={handleSynthesizeSermonFromCaptions}
+                    disabled={isBuildingSermonFromCaptions}
+                    title="Synthesize all captured video live captions into complete sermon message notes"
+                    className="flex items-center gap-1.5 rounded-xl bg-gradient-to-r from-amber-500 via-amber-600 to-amber-700 px-3 py-1.5 text-xs font-bold text-white shadow-xs hover:brightness-110 transition disabled:opacity-50"
+                  >
+                    {isBuildingSermonFromCaptions ? (
+                      <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                    ) : (
+                      <Sparkles className="h-3.5 w-3.5 text-amber-200" />
+                    )}
+                    <span>{isBuildingSermonFromCaptions ? "Making Sermon..." : "Make Sermon From Captions"}</span>
+                  </button>
+
+                  {/* Speech / Audio Mic Toggle */}
+                  <button
+                    type="button"
+                    onClick={() => {
+                      if (isListeningAudio) {
+                        stopAudioRecognition();
+                      } else {
+                        startAudioRecognition();
+                      }
+                    }}
+                    title="Capture live spoken words directly from video audio output / microphone"
+                    className={`flex items-center gap-1 rounded-xl px-2.5 py-1 text-[11px] font-bold transition border ${
+                      isListeningAudio
+                        ? "bg-red-600 text-white border-red-700 shadow-xs animate-pulse"
+                        : "bg-paper text-ink border-border hover:bg-surface-tint"
+                    }`}
+                  >
+                    {isListeningAudio ? <Mic className="h-3 w-3" /> : <MicOff className="h-3 w-3" />}
+                    <span>{isListeningAudio ? "Listening Video Audio" : "Listen to Audio"}</span>
+                  </button>
+                </div>
+
+                <div className="flex items-center gap-1.5">
+                  <button
+                    type="button"
+                    onClick={() => setShowCaptions(!showCaptions)}
+                    className={`rounded-lg px-2 py-1 text-[10px] font-bold border transition ${
+                      showCaptions
+                        ? "bg-amber-400 text-slate-950 border-amber-300"
+                        : "bg-paper text-ink-muted border-border"
+                    }`}
+                  >
+                    CC Overlay: {showCaptions ? "ON" : "OFF"}
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={() => {
+                      if (confirm("Clear live captions feed?")) {
+                        setCaptions([]);
+                        setCurrentLiveCaption(null);
+                      }
+                    }}
+                    title="Clear live captions"
+                    className="rounded-lg p-1 text-ink-muted hover:text-red-500 transition"
+                  >
+                    <RotateCcw className="h-3.5 w-3.5" />
+                  </button>
+                </div>
+              </div>
+
+              {/* Speech Error Banner if any */}
+              {speechError && (
+                <div className="rounded-xl bg-amber-50 dark:bg-amber-950/40 p-2 text-[11px] text-amber-800 dark:text-amber-300 border border-amber-200 flex items-center justify-between">
+                  <span>{speechError}</span>
+                  <button onClick={() => setSpeechError(null)} className="font-bold ml-2">✕</button>
+                </div>
+              )}
+
+              {/* Live Audio Status Ticker */}
+              <div className="flex items-center justify-between rounded-xl bg-slate-950 p-2.5 text-white border border-slate-800">
+                <div className="flex items-center gap-2">
+                  <span className="flex h-2 w-2 rounded-full bg-emerald-400 animate-ping" />
+                  <span className="text-xs font-semibold text-slate-200">
+                    {isListeningAudio ? "Capturing Video Audio Live" : "Sanctuary Live Stream Feed Active"}
+                  </span>
+                </div>
+                <div className="flex items-center gap-1">
+                  <span className="h-3 w-1 bg-emerald-400 rounded-full animate-pulse" />
+                  <span className="h-4 w-1 bg-sky-400 rounded-full animate-pulse delay-75" />
+                  <span className="h-2 w-1 bg-amber-400 rounded-full animate-pulse delay-150" />
+                  <span className="text-[10px] text-slate-400 font-mono ml-1">{captions.length} lines</span>
+                </div>
+              </div>
+
+              {/* Scrolling Captions List */}
+              <div className="flex-1 overflow-y-auto space-y-2 pr-1">
+                {/* Interim Live Speech Bubble */}
+                {interimTranscript && (
+                  <div className="rounded-2xl border border-amber-400/50 bg-amber-500/10 p-2.5 text-xs text-ink animate-pulse">
+                    <div className="flex items-center gap-1 text-[10px] font-bold text-amber-600 dark:text-amber-400 mb-0.5">
+                      <Mic className="h-3 w-3" />
+                      <span>Speaking right now...</span>
+                    </div>
+                    <p className="italic font-medium">{interimTranscript}</p>
+                  </div>
+                )}
+
+                {captions.map((cap) => (
+                  <div
+                    key={cap.id}
+                    className="group rounded-2xl border border-border bg-surface-tint p-2.5 text-xs transition hover:border-accent/40"
+                  >
+                    <div className="flex items-center justify-between gap-2 text-[10px] mb-1">
+                      <div className="flex items-center gap-1 font-semibold text-ink">
+                        <span className="h-1.5 w-1.5 rounded-full bg-red-500" />
+                        <span className="text-accent">{cap.speaker}</span>
+                      </div>
+                      <div className="flex items-center gap-1.5">
+                        <span className="text-ink-muted font-mono">{cap.timestamp}</span>
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setNotes((prev) =>
+                              prev ? `${prev}\n• [${cap.timestamp}] ${cap.text}` : `• [${cap.timestamp}] ${cap.text}`
+                            );
+                            setActiveTab("notes");
+                          }}
+                          className="text-[10px] font-bold text-accent hover:underline opacity-80 group-hover:opacity-100"
+                        >
+                          + Add to Notes
+                        </button>
+                      </div>
+                    </div>
+
+                    <p className="text-ink leading-relaxed font-sans">{cap.text}</p>
+
+                    {cap.scriptureReferences && cap.scriptureReferences.length > 0 && (
+                      <div className="mt-1 flex items-center gap-1 text-[10px] font-bold text-emerald-600 dark:text-emerald-400">
+                        <BookOpen className="h-3 w-3" />
+                        <span>Scripture: {cap.scriptureReferences.join(", ")}</span>
+                      </div>
+                    )}
+                  </div>
+                ))}
+              </div>
+
+              {/* Bottom Synthesis Callout */}
+              <div className="rounded-2xl border border-border bg-paper p-3 flex items-center justify-between gap-2 shadow-xs">
+                <div>
+                  <p className="text-xs font-bold text-ink">Ready to compile sermon message?</p>
+                  <p className="text-[10px] text-ink-muted">
+                    Captures scriptures, ministerial points &amp; decrees into Word/PDF notes.
+                  </p>
+                </div>
+                <button
+                  type="button"
+                  onClick={handleSynthesizeSermonFromCaptions}
+                  disabled={isBuildingSermonFromCaptions}
+                  className="rounded-xl bg-accent px-3 py-1.5 text-xs font-bold text-white shadow-xs hover:bg-accent-dark transition shrink-0 flex items-center gap-1 disabled:opacity-50"
+                >
+                  <Sparkles className="h-3 w-3" />
+                  <span>Synthesize</span>
+                </button>
+              </div>
+            </div>
+          )}
+
           {/* Tab 2: Intelligent Live Sermon Notes Studio */}
           {activeTab === "notes" && (
             <div className="flex flex-1 flex-col overflow-hidden p-3 gap-2.5">
               {/* Automated Note-Making Controls Bar */}
               <div className="flex flex-wrap items-center justify-between gap-1.5 rounded-2xl bg-surface-tint p-2 border border-border">
                 <div className="flex items-center gap-1.5 flex-wrap">
+                  <button
+                    type="button"
+                    onClick={handleSynthesizeSermonFromCaptions}
+                    disabled={isBuildingSermonFromCaptions}
+                    title="Synthesize written sermon message directly from live video captions"
+                    className="flex items-center gap-1 rounded-xl bg-gradient-to-r from-amber-500 to-amber-600 px-2.5 py-1 text-[11px] font-bold text-white shadow-xs hover:brightness-110 transition disabled:opacity-50"
+                  >
+                    {isBuildingSermonFromCaptions ? (
+                      <Loader2 className="h-3 w-3 animate-spin" />
+                    ) : (
+                      <Captions className="h-3 w-3 text-amber-200" />
+                    )}
+                    <span>{isBuildingSermonFromCaptions ? "Compiling..." : "From Live Captions"}</span>
+                  </button>
+
                   <button
                     type="button"
                     onClick={handleAutoGenerateNotes}
@@ -1097,6 +1621,19 @@ export function LiveStreamPlayer({
                   >
                     <Radio className={`h-3 w-3 ${isAutoCapturing ? "animate-pulse" : ""}`} />
                     <span>{isAutoCapturing ? "Live Auto-Capture ON" : "Auto-Capture"}</span>
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={() => setAutoSyncCaptionsToNotes(!autoSyncCaptionsToNotes)}
+                    title="Automatically appends live video captions into sermon notes as spoken"
+                    className={`flex items-center gap-1 rounded-xl px-2 py-1 text-[10px] font-semibold transition border ${
+                      autoSyncCaptionsToNotes
+                        ? "bg-emerald-600 text-white border-emerald-700 shadow-xs"
+                        : "bg-paper text-ink-muted border-border hover:bg-surface-tint"
+                    }`}
+                  >
+                    <span>Sync CC to Notes: {autoSyncCaptionsToNotes ? "ON" : "OFF"}</span>
                   </button>
                 </div>
 

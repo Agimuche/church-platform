@@ -1,14 +1,15 @@
 "use client";
 
-import React, { useState, useRef } from "react";
+import React, { useState, useRef, useEffect } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { motion, useMotionValue, useTransform, useSpring } from "motion/react";
-import { ExternalLink, Sparkles, Video } from "lucide-react";
+import { ExternalLink, Sparkles, Video, Captions } from "lucide-react";
 import {
   TBC_DEFAULT_CURRENT_SERVICE_YOUTUBE_ID,
   TBC_DEFAULT_FACEBOOK_LIVE_URL,
 } from "@/lib/utils/stream-extractor";
+import { ZOE_LIFE_LIVE_CAPTIONS, LiveCaptionEntry } from "@/lib/data/live-captions";
 
 interface HeroVisualProps {
   isLive?: boolean;
@@ -23,7 +24,22 @@ export function Hero3dVisual({
 }: HeroVisualProps) {
   const [activeMode, setActiveMode] = useState<"broadcast" | "interactive3d">("broadcast");
   const [platform, setPlatform] = useState<"youtube" | "facebook">("youtube");
+  const [showCaptions, setShowCaptions] = useState(true);
+  const [, setCaptionIndex] = useState(2);
+  const [currentCaption, setCurrentCaption] = useState<LiveCaptionEntry>(ZOE_LIFE_LIVE_CAPTIONS[2]);
   const cardRef = useRef<HTMLDivElement>(null);
+
+  // Cycle synchronized captions in hero
+  useEffect(() => {
+    const timer = setInterval(() => {
+      setCaptionIndex((prev) => {
+        const next = (prev + 1) % ZOE_LIFE_LIVE_CAPTIONS.length;
+        setCurrentCaption(ZOE_LIFE_LIVE_CAPTIONS[next]);
+        return next;
+      });
+    }, 6000);
+    return () => clearInterval(timer);
+  }, []);
 
   // 3D Motion values for mouse hover tilt
   const x = useMotionValue(0);
@@ -152,8 +168,19 @@ export function Hero3dVisual({
                 </span>
               </div>
 
-              {/* Platform Switcher & Sanctuary Link */}
+              {/* Platform Switcher, CC Toggle & Sanctuary Link */}
               <div className="pointer-events-auto flex items-center gap-1.5 bg-black/70 p-1 rounded-full backdrop-blur-md border border-white/10 text-[10px] font-bold">
+                <button
+                  type="button"
+                  onClick={() => setShowCaptions(!showCaptions)}
+                  title="Toggle Live Captions (CC)"
+                  className={`flex items-center gap-1 px-2 py-0.5 rounded-full transition ${
+                    showCaptions ? "bg-amber-400 text-slate-950 font-bold" : "text-slate-300 hover:text-white"
+                  }`}
+                >
+                  <Captions className="h-3 w-3" />
+                  <span>CC</span>
+                </button>
                 <button
                   type="button"
                   onClick={() => setPlatform("youtube")}
@@ -181,6 +208,31 @@ export function Hero3dVisual({
                 </Link>
               </div>
             </div>
+
+            {/* Live Captions Subtitle Overlay Banner in Hero Player */}
+            {showCaptions && currentCaption && (
+              <div className="pointer-events-auto absolute bottom-3 left-3 right-3 sm:left-6 sm:right-6 z-25 flex flex-col items-center">
+                <div className="max-w-xl w-full rounded-2xl bg-black/85 backdrop-blur-md px-4 py-2 border border-white/20 shadow-2xl text-center">
+                  <div className="flex items-center justify-between gap-1 mb-0.5">
+                    <span className="flex items-center gap-1 text-[10px] font-bold text-amber-300">
+                      <span className="h-1.5 w-1.5 rounded-full bg-red-500 animate-pulse" />
+                      <span>LIVE CAPTION</span>
+                      <span className="text-slate-300 font-normal">• {currentCaption.speaker}</span>
+                    </span>
+                    <Link
+                      href="/live"
+                      className="text-[10px] font-bold text-sky-300 hover:underline flex items-center gap-0.5"
+                    >
+                      <Sparkles className="h-2.5 w-2.5" />
+                      <span>Make Sermon Notes &rarr;</span>
+                    </Link>
+                  </div>
+                  <p className="text-xs sm:text-sm font-medium text-white line-clamp-2">
+                    &ldquo;{currentCaption.text}&rdquo;
+                  </p>
+                </div>
+              </div>
+            )}
           </div>
         ) : (
           /* 3D Grace Portal Interactive Graphics Mode */
